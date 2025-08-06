@@ -5,6 +5,7 @@ using MessageApp.Model;
 using MessageApp.Repositories.Interface;
 using Microsoft.AspNetCore.Mvc;
 using BCrypt.Net;
+using Microsoft.AspNetCore.Authorization;
 
 
 
@@ -35,9 +36,14 @@ namespace MessageApp.Controllers
 
             try
             {
-                var existingUser = await _userRepository.GetUserByEmailAsync(dto.Email);
-                if (existingUser != null)
+
+                var existingUserByEmail = await _userRepository.GetUserByEmailAsync(dto.Email);
+                if (existingUserByEmail != null)
                     return Conflict(new { Message = "Email already registered." });
+
+                var existingUserByUsername = await _userRepository.GetUserByUsernameAsync(dto.Username);
+                if (existingUserByUsername != null)
+                    return Conflict(new { Message = "Username already taken." });
 
                 var user = new User
                 {
@@ -80,6 +86,29 @@ namespace MessageApp.Controllers
                 _logger.LogError(ex, "Error during user login.");
                 return StatusCode(500, new { Message = "Internal server error." });
             }
+        }
+        [Authorize]
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                _logger.LogWarning("Logout failed: Invalid user ID claim");
+                return Unauthorized(new { Message = "Invalid user" });
+            }
+
+            _logger.LogInformation("Logout attempt for user ID: {UserId}", userId);
+            var result = await _userRepository.LogoutAsync(userId);
+
+            if (result == null || !result.Success)
+            {
+                _logger.LogWarning("Logout failed for user ID: {UserId}. Reason: {Message}", userId, result?.Message);
+                return Unauthorized(new { Message = result?.Message ?? "Logout failed" });
+            }
+
+            _logger.LogInformation("User successfully logged out. User ID: {UserId}", userId);
+            return Ok(new { Message = result.Message });
         }
     }
 }

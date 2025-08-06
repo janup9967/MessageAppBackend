@@ -3,6 +3,8 @@ using MessageApp.Model;
 using MessageApp.Repositories.Interface;
 using Microsoft.EntityFrameworkCore;
 using MessageApp.Dtos;
+using MessageApp.Dtos.Common;
+using MessageApp.Helpers;
 
 
 namespace MessageApp.Repositories
@@ -12,8 +14,8 @@ namespace MessageApp.Repositories
     public class UserRepository : IUserRepository
     {
         private readonly AppDbContext _context;
-        private readonly MessageApp.Helpers.JwtService _jwtService;
-        public UserRepository(AppDbContext context, MessageApp.Helpers.JwtService jwtService)
+        private readonly JwtService _jwtService;
+        public UserRepository(AppDbContext context, JwtService jwtService)
         {
             _context = context;
             _jwtService = jwtService;
@@ -24,6 +26,10 @@ namespace MessageApp.Repositories
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
             return user;
+        }
+        public async Task<User> GetUserByUsernameAsync(string username)
+        {
+            return await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
         }
 
         public async Task<User> GetUserByEmailAsync(string email)
@@ -48,6 +54,16 @@ namespace MessageApp.Repositories
                 Username = user.Username,
                 Token = token
             };
+        }
+        public async Task<ApiResponse<object>> LogoutAsync(string userId)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id.ToString() == userId);
+            if (user == null)
+            {
+                return ApiResponse<object>.ErrorResponse("Invalid user");
+            }
+            // For JWT, logout is stateless. Add token blacklist logic here if needed.
+            return ApiResponse<object>.SuccessResponse(new { }, "Logout successful");
         }
     }
 
