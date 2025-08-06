@@ -9,6 +9,18 @@ using MessageApp.Repositories;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure CORS to allow requests from Angular frontend
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngular",
+        policy => policy
+            .WithOrigins("http://localhost:4200") // Angular default port
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials()
+    );
+});
 // Configure logging to write to Logs folder
 
 // Serilog configuration
@@ -19,8 +31,11 @@ var builder = WebApplication.CreateBuilder(args);
 // builder.Host.UseSerilog();
 
 // Register AppDbContext with SQL Server connection string
+// builder.Services.AddDbContext<AppDbContext>(options =>
+//     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultAnupConnection")));
 
 // Register JwtService
 builder.Services.AddScoped<JwtService>();
@@ -78,7 +93,9 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
+
 var app = builder.Build();
+
 
 
 
@@ -88,6 +105,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// Use CORS policy
+app.UseCors("AllowAngular");
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
