@@ -31,13 +31,13 @@ namespace MessageApp.Controllers
         public async Task<IActionResult> SignUp([FromBody] UserSignupDto dto)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+                return BadRequest(new { Errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage) });
 
             try
             {
                 var existingUser = await _userRepository.GetUserByEmailAsync(dto.Email);
                 if (existingUser != null)
-                    return Conflict("Email already registered.");
+                    return Conflict(new { Message = "Email already registered." });
 
                 var user = new User
                 {
@@ -57,6 +57,28 @@ namespace MessageApp.Controllers
             {
                 _logger.LogError(ex, "Error during user signup.");
                 return StatusCode(500, "Internal server error.");
+            }
+        }
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] UserLoginDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new { Errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage) });
+
+            try
+            {
+                var response = await _userRepository.LoginUserAsync(dto);
+                if (response == null)
+                {
+                    return Unauthorized(new { Message = "Invalid username/email or password." });
+                }
+                _logger.LogInformation($"User {dto.UsernameOrEmail} logged in successfully.");
+                return Ok(new { Message = "Login successful.", data = response });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during user login.");
+                return StatusCode(500, new { Message = "Internal server error." });
             }
         }
     }

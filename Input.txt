@@ -1,0 +1,19 @@
+Register Body 
+
+{
+  "username": "anup",
+  "email": "anup@example.com",
+  "password": "Anup1234@"
+}
+
+login Body
+
+{
+  "usernameOrEmail": "anup@example.com",
+  "password": "Anup1234@"
+}
+
+{
+  "usernameOrEmail": "anup",
+  "password": "Anup1234@"
+}

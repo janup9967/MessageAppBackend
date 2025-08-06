@@ -31,6 +31,8 @@ builder.Services.AddCors(options =>
 // builder.Host.UseSerilog();
 
 // Register AppDbContext with SQL Server connection string
+
+
 // builder.Services.AddDbContext<AppDbContext>(options =>
 //     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 

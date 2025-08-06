@@ -1,4 +1,5 @@
 using MessageApp.Model;
+using MessageApp.Dtos;
 
 namespace MessageApp.Repositories.Interface
 {
@@ -7,6 +8,7 @@ namespace MessageApp.Repositories.Interface
     {
         Task<User> CreateUserAsync(User user);
         Task<User> GetUserByEmailAsync(string email);
+        Task<UserResponseDto> LoginUserAsync(UserLoginDto loginDto);
     }
 
 }
