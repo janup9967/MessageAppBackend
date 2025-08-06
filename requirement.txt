@@ -1,0 +1,62 @@
+Objective: 
+    Enable users to send and receive messages in real-time, with read receipts, multi-device sync & contact-based conversation management.
+
+Functional Requirements: 
+
+    Backend (ASP.NET Web API + SQL Server + SignalR + Swagger)
+
+    1. Authentication: 
+        Register/Login using JWT
+        Role-based access (User)
+        Refresh token support
+
+    2. Messaging: 
+        Send message (text/media)
+        Fetch conversation history
+        Mark message as read
+        Delete/edit message (optional)
+        Store messages using SQL Server stored procedures
+    
+    3. Real-Time Communication:
+        SignalR Hub for:
+            New message delivery
+            Read receipts
+            Typing indicators
+            Online status updates
+
+    4. Swagger Integration:
+        Document all API endpoints
+        Enable testing via Swagger UI
+
+    5. Contact Management
+        Add contact (user-to-user relationship)
+        Fetch all contacts for logged-in user
+        Remove contact (optional)
+
+    Frontend (Angular)
+
+    1. Authentication UI:
+        Login/Register
+        Password reset
+
+    2. Chat Interface:
+        List of conversations
+        Real-time message updates
+        Read/unread indicators
+        Typing status
+        Media previews
+
+    3. SignalR Integration:
+        Connect to SignalR Hub
+        Emit and listen for:
+            New messages
+            Read receipts
+            Typing events
+        
+    4. Responsive Design:
+        Mobile-first layout
+        Adaptive chat UI
+
+    5. Contact List UI
+        Display all contacts
+        Click to open conversation with selected contact
