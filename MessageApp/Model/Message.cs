@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using MessageApp.Model;
 
 namespace MessageApp.Model
@@ -15,8 +16,13 @@ namespace MessageApp.Model
     public bool IsRead { get; set; }
 
     // Navigation Properties
+    [JsonIgnore]
     public User Sender { get; set; }
+    
+    [JsonIgnore]
     public User Receiver { get; set; }
+
+    [JsonIgnore]
     public Conversation Conversation { get; set; }
 }
 

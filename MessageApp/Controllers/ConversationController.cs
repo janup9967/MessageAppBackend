@@ -14,6 +14,7 @@ namespace MessageApp.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class ConversationsController : ControllerBase
     {
         private readonly IConversationRepository _conversationRepository;

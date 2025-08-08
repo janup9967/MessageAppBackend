@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 
 namespace MessageApp.Model
@@ -22,10 +23,18 @@ public class User
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    // Navigation Properties
+        // Navigation Properties
+    
+    [JsonIgnore]
     public ICollection<Message> SentMessages { get; set; }
+
+    [JsonIgnore]
     public ICollection<Message> ReceivedMessages { get; set; }
+
+    [JsonIgnore]
     public ICollection<Conversation> CreatedConversations { get; set; }
+
+    [JsonIgnore]
     public ICollection<Conversation> ReceivedConversations { get; set; }
 }
 

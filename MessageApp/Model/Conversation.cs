@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using MessageApp.Model;
 
 namespace MessageApp.Model
@@ -11,7 +12,11 @@ namespace MessageApp.Model
         public DateTime CreatedAt { get; set; }
 
         // Navigation Properties
+
+        [JsonIgnore]
         public User Creator { get; set; }
+
+        [JsonIgnore]
         public User Receiver { get; set; }
     }
 
