@@ -121,6 +121,34 @@ namespace MessageApp.Controllers
             }
         }
 
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetConversationById(int id)
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                {
+                    _logger.LogWarning("User ID claim not found or invalid");
+                    return Unauthorized("User ID not found in token.");
+                }
+
+                var conversation = await _conversationRepository.GetConversationWithMessagesAsync(id, userId);
+                if (conversation == null)
+                {
+                    return NotFound("Conversation not found or access denied.");
+                }
+
+                return Ok(conversation);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving conversation with ID {Id}", id);
+                return StatusCode(500, "An error occurred while retrieving the conversation.");
+            }
+        }
+
+
     }
 
 
