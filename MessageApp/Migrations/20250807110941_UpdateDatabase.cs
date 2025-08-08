@@ -6,25 +6,11 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace MessageApp.Migrations
 {
     /// <inheritdoc />
-    public partial class InitalCreate : Migration
+    public partial class UpdateDatabase : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "Conversations",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Conversations", x => x.Id);
-                });
-
             migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
@@ -42,28 +28,30 @@ namespace MessageApp.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ConversationUsers",
+                name: "Conversations",
                 columns: table => new
                 {
-                    ConversationId = table.Column<int>(type: "int", nullable: false),
-                    UserId = table.Column<int>(type: "int", nullable: false),
                     Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CreatedByUser = table.Column<int>(type: "int", nullable: false),
+                    ReceiveId = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ConversationUsers", x => new { x.ConversationId, x.UserId });
+                    table.PrimaryKey("PK_Conversations", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ConversationUsers_Conversations_ConversationId",
-                        column: x => x.ConversationId,
-                        principalTable: "Conversations",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_ConversationUsers_Users_UserId",
-                        column: x => x.UserId,
+                        name: "FK_Conversations_Users_CreatedByUser",
+                        column: x => x.CreatedByUser,
                         principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Conversations_Users_ReceiveId",
+                        column: x => x.ReceiveId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -73,9 +61,10 @@ namespace MessageApp.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     SenderId = table.Column<int>(type: "int", nullable: false),
+                    ReceiveId = table.Column<int>(type: "int", nullable: false),
                     ConversationId = table.Column<int>(type: "int", nullable: false),
-                    Content = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    SentAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Time = table.Column<DateTime>(type: "datetime2", nullable: false),
                     IsRead = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
@@ -88,6 +77,12 @@ namespace MessageApp.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
+                        name: "FK_Messages_Users_ReceiveId",
+                        column: x => x.ReceiveId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
                         name: "FK_Messages_Users_SenderId",
                         column: x => x.SenderId,
                         principalTable: "Users",
@@ -96,14 +91,24 @@ namespace MessageApp.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_ConversationUsers_UserId",
-                table: "ConversationUsers",
-                column: "UserId");
+                name: "IX_Conversations_CreatedByUser",
+                table: "Conversations",
+                column: "CreatedByUser");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Conversations_ReceiveId",
+                table: "Conversations",
+                column: "ReceiveId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Messages_ConversationId",
                 table: "Messages",
                 column: "ConversationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Messages_ReceiveId",
+                table: "Messages",
+                column: "ReceiveId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Messages_SenderId",
@@ -114,9 +119,6 @@ namespace MessageApp.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "ConversationUsers");
-
             migrationBuilder.DropTable(
                 name: "Messages");
 

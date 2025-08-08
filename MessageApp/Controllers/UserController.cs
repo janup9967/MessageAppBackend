@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace MessageApp.Controllers
 {
+
+    
     [ApiController]
     [Route("api/[controller]")]
     public class UserController : ControllerBase
@@ -87,6 +89,43 @@ namespace MessageApp.Controllers
                 return StatusCode(500, new { Message = "Internal server error." });
             }
         }
+
+        [HttpGet("exists")]
+        [Authorize]
+public async Task<IActionResult> CheckUserExists([FromQuery] string identifier)
+        {
+            if (string.IsNullOrWhiteSpace(identifier))
+                return BadRequest(new { Message = "Identifier (email or username) is required." });
+
+            try
+            {
+                var userByEmail = await _userRepository.GetUserByEmailAsync(identifier);
+                var userByUsername = await _userRepository.GetUserByUsernameAsync(identifier);
+
+                var user = userByEmail ?? userByUsername;
+
+                if (user == null)
+                    return NotFound(new { Message = "User not found." });
+
+                return Ok(new
+                {
+                    Message = "User exists.",
+                    User = new
+                    {
+                        user.Id,
+                        user.Username,
+                        user.Email,
+                        user.CreatedAt
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking user existence.");
+                return StatusCode(500, new { Message = "Internal server error." });
+            }
+        }
+
         [Authorize]
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()

@@ -33,11 +33,11 @@ builder.Services.AddCors(options =>
 // Register AppDbContext with SQL Server connection string
 
 
-// builder.Services.AddDbContext<AppDbContext>(options =>
-//     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultAnupConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// builder.Services.AddDbContext<AppDbContext>(options =>
+//     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultAnupConnection")));
 
 // Register JwtService
 builder.Services.AddScoped<JwtService>();
@@ -66,6 +66,8 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddControllers();
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IConversationRepository, ConversationRepository>();
+builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 
 // Register Swagger/OpenAPI (optional, but recommended)
 builder.Services.AddEndpointsApiExplorer();
