@@ -31,6 +31,7 @@ namespace MessageApp.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> CreateConversation([FromBody] CreateConversationDto dto)
         {
             if (!ModelState.IsValid)
@@ -92,33 +93,34 @@ namespace MessageApp.Controllers
         }
 
         [HttpGet]
+        [Authorize]
 public async Task<IActionResult> GetConversations()
-{
-    try
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
         {
-            _logger.LogWarning("User ID claim not found or invalid");
-            return Unauthorized("User ID not found in token.");
+            try
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                {
+                    _logger.LogWarning("User ID claim not found or invalid");
+                    return Unauthorized("User ID not found in token.");
+                }
+
+                var conversations = await _conversationRepository.GetConversationsForUserAsync(userId);
+
+                if (conversations == null || !conversations.Any())
+                {
+                    _logger.LogInformation("No conversations found for user {UserId}", userId);
+                    return NotFound("No conversations found.");
+                }
+
+                return Ok(conversations);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving conversations");
+                return StatusCode(500, "An error occurred while retrieving conversations.");
+            }
         }
-
-        var conversations = await _conversationRepository.GetConversationsForUserAsync(userId);
-
-        if (conversations == null || !conversations.Any())
-        {
-            _logger.LogInformation("No conversations found for user {UserId}", userId);
-            return NotFound("No conversations found.");
-        }
-
-        return Ok(conversations);
-    }
-    catch (Exception ex)
-    {
-        _logger.LogError(ex, "Error retrieving conversations");
-        return StatusCode(500, "An error occurred while retrieving conversations.");
-    }
-}
 
     }
 
