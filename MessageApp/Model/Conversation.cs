@@ -1,20 +1,18 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+using MessageApp.Model;
 
 namespace MessageApp.Model
 {
-public class Conversation
-{
-    public int Id { get; set; }
+    public class Conversation
+    {
+        public int Id { get; set; }
+        public int CreatedByUser { get; set; }
+        public int ReceiveId { get; set; }
+        public List<Message>? Messages { get; set; }
+        public DateTime CreatedAt { get; set; }
 
-    [StringLength(100)]
-    public string Name { get; set; }
+        // Navigation Properties
+        public User Creator { get; set; }
+        public User Receiver { get; set; }
+    }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    public ICollection<ConversationUser> ConversationUsers { get; set; }
-    public ICollection<Message> Messages { get; set; }
-}
-    
 }

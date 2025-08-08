@@ -6,11 +6,23 @@ Register Body
   "password": "Anup1234@"
 }
 
+{
+  "username": "Madhur",
+  "email": "madhur@gmail.com",
+  "password": "Madhur@1234"
+}
+
 login Body
 
 {
   "usernameOrEmail": "anup@example.com",
   "password": "Anup1234@"
+}
+
+
+{
+  "usernameOrEmail": "Madhur",
+  "password": "Madhur@1234"
 }
 
 {

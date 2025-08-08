@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MessageApp.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250806151242_InitalCreate")]
-    partial class InitalCreate
+    [Migration("20250807110941_UpdateDatabase")]
+    partial class UpdateDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -35,32 +35,19 @@ namespace MessageApp.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                    b.Property<int>("CreatedByUser")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReceiveId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatedByUser");
+
+                    b.HasIndex("ReceiveId");
+
                     b.ToTable("Conversations");
-                });
-
-            modelBuilder.Entity("MessageApp.Model.ConversationUser", b =>
-                {
-                    b.Property<int>("ConversationId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Id")
-                        .HasColumnType("int");
-
-                    b.HasKey("ConversationId", "UserId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("ConversationUsers");
                 });
 
             modelBuilder.Entity("MessageApp.Model.Message", b =>
@@ -73,8 +60,7 @@ namespace MessageApp.Migrations
 
                     b.Property<string>("Content")
                         .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("ConversationId")
                         .HasColumnType("int");
@@ -82,15 +68,20 @@ namespace MessageApp.Migrations
                     b.Property<bool>("IsRead")
                         .HasColumnType("bit");
 
+                    b.Property<int>("ReceiveId")
+                        .HasColumnType("int");
+
                     b.Property<int>("SenderId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("SentAt")
+                    b.Property<DateTime>("Time")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ConversationId");
+
+                    b.HasIndex("ReceiveId");
 
                     b.HasIndex("SenderId");
 
@@ -126,23 +117,23 @@ namespace MessageApp.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("MessageApp.Model.ConversationUser", b =>
+            modelBuilder.Entity("MessageApp.Model.Conversation", b =>
                 {
-                    b.HasOne("MessageApp.Model.Conversation", "Conversation")
-                        .WithMany("ConversationUsers")
-                        .HasForeignKey("ConversationId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                    b.HasOne("MessageApp.Model.User", "Creator")
+                        .WithMany("CreatedConversations")
+                        .HasForeignKey("CreatedByUser")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("MessageApp.Model.User", "User")
-                        .WithMany("ConversationUsers")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                    b.HasOne("MessageApp.Model.User", "Receiver")
+                        .WithMany("ReceivedConversations")
+                        .HasForeignKey("ReceiveId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Conversation");
+                    b.Navigation("Creator");
 
-                    b.Navigation("User");
+                    b.Navigation("Receiver");
                 });
 
             modelBuilder.Entity("MessageApp.Model.Message", b =>
@@ -153,29 +144,39 @@ namespace MessageApp.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("MessageApp.Model.User", "Receiver")
+                        .WithMany("ReceivedMessages")
+                        .HasForeignKey("ReceiveId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("MessageApp.Model.User", "Sender")
-                        .WithMany("Messages")
+                        .WithMany("SentMessages")
                         .HasForeignKey("SenderId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Conversation");
 
+                    b.Navigation("Receiver");
+
                     b.Navigation("Sender");
                 });
 
             modelBuilder.Entity("MessageApp.Model.Conversation", b =>
                 {
-                    b.Navigation("ConversationUsers");
-
                     b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("MessageApp.Model.User", b =>
                 {
-                    b.Navigation("ConversationUsers");
+                    b.Navigation("CreatedConversations");
 
-                    b.Navigation("Messages");
+                    b.Navigation("ReceivedConversations");
+
+                    b.Navigation("ReceivedMessages");
+
+                    b.Navigation("SentMessages");
                 });
 #pragma warning restore 612, 618
         }
