@@ -12,6 +12,8 @@ namespace MessageApp.Repositories.Interface
 
         Task<List<ConversationDto>> GetConversationsForUserAsync(int userId);
         Task<Conversation> GetConversationBetweenUsersAsync(int senderId, int id);
+
+        Task<Conversation?> GetConversationWithMessagesAsync(int conversationId, int userId);
     }
 
 }

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using MessageApp.Dtos;
 using MessageApp.Dtos.Common;
 using MessageApp.Helpers;
+using MessageApp.Data;
 
 
 namespace MessageApp.Repositories

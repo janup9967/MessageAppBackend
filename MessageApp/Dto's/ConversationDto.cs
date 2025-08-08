@@ -9,15 +9,17 @@ namespace MessageApp.Dtos
     }
 
     public class ConversationDto
-{
-    public int Id { get; set; }
-    public string ReceiverUsername { get; set; }
-    public DateTime CreatedAt { get; set; }
+    {
+        public int Id { get; set; }
 
-    public string? LastMessageContent { get; set; }
-    public DateTime? LastMessageTime { get; set; }
-    public bool? LastMessageIsRead { get; set; }
-}
+        public string SenderUsername { get; set; }
+        public string ReceiverUsername { get; set; }
+        public DateTime CreatedAt { get; set; }
+
+        public string? LastMessageContent { get; set; }
+        public DateTime? LastMessageTime { get; set; }
+        public bool? LastMessageIsRead { get; set; }
+    }
 
 
 }

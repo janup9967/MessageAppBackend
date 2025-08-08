@@ -14,6 +14,7 @@ namespace MessageApp.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class ConversationsController : ControllerBase
     {
         private readonly IConversationRepository _conversationRepository;
@@ -93,8 +94,12 @@ namespace MessageApp.Controllers
         }
 
         [HttpGet]
+<<<<<<< HEAD
         [Authorize]
 public async Task<IActionResult> GetConversations()
+=======
+        public async Task<IActionResult> GetConversations()
+>>>>>>> 8b0bf83a93a6609a836e17c9480cff68886f9fec
         {
             try
             {
@@ -122,6 +127,37 @@ public async Task<IActionResult> GetConversations()
             }
         }
 
+<<<<<<< HEAD
+=======
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetConversationById(int id)
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                {
+                    _logger.LogWarning("User ID claim not found or invalid");
+                    return Unauthorized("User ID not found in token.");
+                }
+
+                var conversation = await _conversationRepository.GetConversationWithMessagesAsync(id, userId);
+                if (conversation == null)
+                {
+                    return NotFound("Conversation not found or access denied.");
+                }
+
+                return Ok(conversation);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving conversation with ID {Id}", id);
+                return StatusCode(500, "An error occurred while retrieving the conversation.");
+            }
+        }
+
+
+>>>>>>> 8b0bf83a93a6609a836e17c9480cff68886f9fec
     }
 
 
