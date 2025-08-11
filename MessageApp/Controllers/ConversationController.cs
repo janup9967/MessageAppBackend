@@ -32,6 +32,7 @@ namespace MessageApp.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> CreateConversation([FromBody] CreateConversationDto dto)
         {
             if (!ModelState.IsValid)
@@ -94,6 +95,7 @@ namespace MessageApp.Controllers
 
         [HttpGet]
         public async Task<IActionResult> GetConversations()
+
         {
             try
             {
