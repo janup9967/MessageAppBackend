@@ -2,6 +2,7 @@ using MessageApp.Data;
 using MessageApp.Dtos;
 using MessageApp.Model;
 using MessageApp.Repositories.Interface;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -22,17 +23,29 @@ namespace MessageApp.Repositories
         {
             try
             {
-                _context.Conversations.Add(conversation);
-                await _context.SaveChangesAsync();
-                _logger.LogInformation("Conversation created with ID {Id}", conversation.Id);
-                return conversation;
+                var parameters = new[]
+                {
+                    new SqlParameter("@CreatedByUser", conversation.CreatedByUser),
+                    new SqlParameter("@ReceiveId", conversation.ReceiveId),
+                    new SqlParameter("@CreatedAt", conversation.CreatedAt)
+                };
+
+                var result = await _context.Conversations
+                    .FromSqlRaw("EXEC CreateConversation @CreatedByUser, @ReceiveId, @CreatedAt", parameters)
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                var createdConversation = result.FirstOrDefault();
+                _logger.LogInformation("Conversation created with ID {Id}", createdConversation?.Id);
+                return createdConversation!;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating conversation");
+                _logger.LogError(ex, "Error creating conversation via stored procedure");
                 throw;
             }
         }
+
 
         public async Task<bool> ConversationExistsAsync(int user1Id, int user2Id)
         {
