@@ -1,4 +1,3 @@
-
 using MessageApp.Dtos;
 using MessageApp.Helpers;
 using MessageApp.Model;
@@ -7,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using BCrypt.Net;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using Microsoft.AspNetCore.SignalR;
+using MessageApp.Hubs;
 
 
 
@@ -15,23 +16,29 @@ namespace MessageApp.Controllers
 
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class MessagesController : ControllerBase
     {
         private readonly IMessageRepository _messageRepository;
         private readonly IUserRepository _userRepository;
+
+        private readonly IHubContext<MessageHub> _hubContext;
         private readonly IConversationRepository _conversationRepository;
         private readonly ILogger<MessagesController> _logger;
 
+        // Only one constructor with all dependencies
         public MessagesController(
             IMessageRepository messageRepository,
             IUserRepository userRepository,
             IConversationRepository conversationRepository,
-            ILogger<MessagesController> logger)
+            ILogger<MessagesController> logger,
+            IHubContext<MessageHub> hubContext)
         {
             _messageRepository = messageRepository;
             _userRepository = userRepository;
             _conversationRepository = conversationRepository;
             _logger = logger;
+            _hubContext = hubContext;
         }
 
         [HttpPost]
@@ -98,6 +105,45 @@ namespace MessageApp.Controllers
                 return StatusCode(500, "An error occurred while sending the message.");
             }
         }
+
+        [HttpPut("read/{messageId}")]
+        public async Task<IActionResult> MarkAsRead(int messageId)
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                {
+                    _logger.LogWarning("User ID claim not found or invalid");
+                    return Unauthorized("User ID not found in token.");
+                }
+
+                // Get the message to check ownership
+                var message = await _messageRepository.GetMessageByIdAsync(messageId);
+                if (message == null)
+                    return NotFound("Message not found.");
+
+                if (message.ReceiveId != userId)
+                {
+                    _logger.LogWarning("User {UserId} tried to mark message {MessageId} as read but is not the receiver", userId, messageId);
+                    return Forbid("Only the receiver can mark the message as read.");
+                }
+
+                var updatedMessage = await _messageRepository.MarkMessageAsReadAsync(messageId);
+
+                // Notify sender via SignalR
+                await _hubContext.Clients.User(message.SenderId.ToString())
+                    .SendAsync("ReceiveReadReceipt", new { messageId = message.Id });
+
+                return Ok(updatedMessage);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error marking message as read");
+                return StatusCode(500, "An error occurred.");
+            }
+        }
+
     }
 
 }

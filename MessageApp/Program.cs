@@ -1,3 +1,7 @@
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using System.Data;
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using MessageApp.Model;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -8,6 +12,7 @@ using MessageApp.Repositories.Interface;
 using MessageApp.Repositories;
 using Serilog;
 using MessageApp.Data;
+using MessageApp.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,7 +66,24 @@ builder.Services.AddAuthentication(options =>
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         };
+
+        // Enable SignalR authentication via access token in query string
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/messagehub"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
+        };
     });
+
+builder.Services.AddSignalR();
 
 // Register controllers (if using attribute routing)
 builder.Services.AddControllers();
@@ -101,6 +123,9 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
+// Ensure stored procedures exist at startup
+StoredProcedureInitializer.EnsureStoredProcedures(app.Services);
+
 
 
 
@@ -119,5 +144,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<MessageHub>("/messagehub");
 
 app.Run();

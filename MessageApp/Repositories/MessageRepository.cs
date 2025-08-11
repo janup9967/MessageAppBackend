@@ -16,6 +16,10 @@ namespace MessageApp.Repositories
             _context = context;
             _logger = logger;
         }
+        public async Task<Message?> GetMessageByIdAsync(int messageId)
+        {
+            return await _context.Messages.AsNoTracking().FirstOrDefaultAsync(m => m.Id == messageId);
+        }
 
         public async Task<Message> SendMessageAsync(Message message)
         {
@@ -36,8 +40,17 @@ namespace MessageApp.Repositories
                     .AsNoTracking()
                     .ToListAsync(); // Avoid chaining FirstOrDefaultAsync
                 var sentMessage = result.FirstOrDefault(); // Do this in memory
-                _logger.LogInformation("Message sent with ID {Id}", sentMessage?.Id);
+
+                if (sentMessage != null)
+                {
+                    _logger.LogInformation("Message sent with ID {Id}", sentMessage.Id);
+                }
+                else
+                {
+                    _logger.LogWarning("SendMessage returned null");
+                }
                 return sentMessage!;
+
             }
             catch (Exception ex)
             {
@@ -45,6 +58,19 @@ namespace MessageApp.Repositories
                 throw;
             }
         }
+
+        public async Task<Message> MarkMessageAsReadAsync(int messageId)
+        {
+            var param = new SqlParameter("@MessageId", messageId);
+
+            var result = await _context.Messages
+                .FromSqlRaw("EXEC MarkMessageAsRead @MessageId", param)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return result.FirstOrDefault();
+        }
+
 
 
     }

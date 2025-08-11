@@ -51,16 +51,23 @@ namespace MessageApp.Repositories
         {
             try
             {
-                return await _context.Conversations.AnyAsync(c =>
-                    (c.CreatedByUser == user1Id && c.ReceiveId == user2Id) ||
-                    (c.CreatedByUser == user2Id && c.ReceiveId == user1Id));
+                var user1Param = new SqlParameter("@User1Id", user1Id);
+                var user2Param = new SqlParameter("@User2Id", user2Id);
+
+                var result = await _context.Conversations
+                                    .FromSqlRaw("EXEC CheckConversationExists @User1Id, @User2Id", user1Param, user2Param)
+                                    .AsNoTracking()
+                                    .ToListAsync(); // Materialize the result first
+
+                return result.Any(); // Check if any rows were returned
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error checking if conversation exists");
+                _logger.LogError(ex, "Error checking if conversation exists via stored procedure");
                 throw;
             }
         }
+
 
         public async Task<List<ConversationDto>> GetConversationsForUserAsync(int userId)
         {

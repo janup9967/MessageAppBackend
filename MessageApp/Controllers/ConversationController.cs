@@ -67,11 +67,12 @@ namespace MessageApp.Controllers
                     return BadRequest("Cannot create a conversation with yourself.");
                 }
 
-                bool exists = await _conversationRepository.ConversationExistsAsync(createdByUserId, receiver.Id);
-                if (exists)
+                // Try to get existing conversation
+                var existingConversation = await _conversationRepository.GetConversationBetweenUsersAsync(createdByUserId, receiver.Id);
+                if (existingConversation != null)
                 {
                     _logger.LogInformation("Conversation already exists between users {User1} and {User2}", createdByUserId, receiver.Id);
-                    return Conflict("Conversation already exists.");
+                    return Ok(existingConversation);
                 }
 
                 var conversation = new Conversation
