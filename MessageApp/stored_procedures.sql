@@ -1,0 +1,16 @@
+CREATE PROCEDURE SendMessage
+    @SenderId INT,
+    @ReceiverId INT,
+    @ConversationId INT,
+    @Content NVARCHAR(MAX),
+    @Time DATETIME,
+    @IsRead BIT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    INSERT INTO Messages (SenderId, ReceiveId, ConversationId, Content, Time, IsRead)
+    VALUES (@SenderId, @ReceiverId, @ConversationId, @Content, @Time, @IsRead);
+
+    SELECT * FROM Messages WHERE Id = SCOPE_IDENTITY();
+END
