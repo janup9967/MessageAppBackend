@@ -47,7 +47,7 @@ namespace MessageApp.Repositories
             }
         }
 
-                public async Task<List<Message>> GetMessagesBetweenUsersAsync(int user1Id, int user2Id)
+        public async Task<List<Message>> GetMessagesBetweenUsersAsync(int user1Id, int user2Id)
         {
             var user1Param = new SqlParameter("@User1Id", user1Id);
             var user2Param = new SqlParameter("@User2Id", user2Id);
@@ -109,8 +109,13 @@ namespace MessageApp.Repositories
                             .Where(m => m.ConversationId == c.Id)
                             .OrderByDescending(m => m.Time)
                             .Select(m => m.IsRead)
-                            .FirstOrDefault()
+                            .FirstOrDefault(),
+
+                        DisplayName = c.CreatedByUser == userId
+                                            ? _context.Users.Where(u => u.Id == c.ReceiveId).Select(u => u.Username).FirstOrDefault()
+                                            : _context.Users.Where(u => u.Id == c.CreatedByUser).Select(u => u.Username).FirstOrDefault()
                     })
+
                     .ToListAsync();
             }
             catch (Exception ex)

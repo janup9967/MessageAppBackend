@@ -1,6 +1,7 @@
-using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
+
 using System.Data;
+using MessageApp.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace MessageApp.Helpers
 {
@@ -9,11 +10,11 @@ namespace MessageApp.Helpers
         public static void EnsureStoredProcedures(IServiceProvider services)
         {
             using var scope = services.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<MessageApp.Data.AppDbContext>();
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var connection = context.Database.GetDbConnection();
             connection.Open();
 
-            var requiredProcedures = new[] { "SendMessage", "CreateConversation", "CheckConversationExists", "GetConversationsForUser", "MarkMessageAsRead" };
+            var requiredProcedures = new[] { "SendMessage", "CreateConversation", "CheckConversationExists", "GetConversationsForUser", "MarkMessageAsRead" , "GetMessagesBetweenUsers"};
             var missingProcedures = new List<string>();
 
             foreach (var proc in requiredProcedures)
