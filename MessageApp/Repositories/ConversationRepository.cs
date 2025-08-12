@@ -2,6 +2,7 @@ using MessageApp.Data;
 using MessageApp.Dtos;
 using MessageApp.Model;
 using MessageApp.Repositories.Interface;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -22,32 +23,51 @@ namespace MessageApp.Repositories
         {
             try
             {
-                _context.Conversations.Add(conversation);
-                await _context.SaveChangesAsync();
-                _logger.LogInformation("Conversation created with ID {Id}", conversation.Id);
-                return conversation;
+                var parameters = new[]
+                {
+                    new SqlParameter("@CreatedByUser", conversation.CreatedByUser),
+                    new SqlParameter("@ReceiveId", conversation.ReceiveId),
+                    new SqlParameter("@CreatedAt", conversation.CreatedAt)
+                };
+
+                var result = await _context.Conversations
+                    .FromSqlRaw("EXEC CreateConversation @CreatedByUser, @ReceiveId, @CreatedAt", parameters)
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                var createdConversation = result.FirstOrDefault();
+                _logger.LogInformation("Conversation created with ID {Id}", createdConversation?.Id);
+                return createdConversation!;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating conversation");
+                _logger.LogError(ex, "Error creating conversation via stored procedure");
                 throw;
             }
         }
+
 
         public async Task<bool> ConversationExistsAsync(int user1Id, int user2Id)
         {
             try
             {
-                return await _context.Conversations.AnyAsync(c =>
-                    (c.CreatedByUser == user1Id && c.ReceiveId == user2Id) ||
-                    (c.CreatedByUser == user2Id && c.ReceiveId == user1Id));
+                var user1Param = new SqlParameter("@User1Id", user1Id);
+                var user2Param = new SqlParameter("@User2Id", user2Id);
+
+                var result = await _context.Conversations
+                                    .FromSqlRaw("EXEC CheckConversationExists @User1Id, @User2Id", user1Param, user2Param)
+                                    .AsNoTracking()
+                                    .ToListAsync(); // Materialize the result first
+
+                return result.Any(); // Check if any rows were returned
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error checking if conversation exists");
+                _logger.LogError(ex, "Error checking if conversation exists via stored procedure");
                 throw;
             }
         }
+
 
         public async Task<List<ConversationDto>> GetConversationsForUserAsync(int userId)
         {
