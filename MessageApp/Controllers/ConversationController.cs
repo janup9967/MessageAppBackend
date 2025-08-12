@@ -96,6 +96,7 @@ namespace MessageApp.Controllers
 
         [HttpGet("All-Coversations")]
         [Authorize]
+
         public async Task<IActionResult> GetConversations()
 
         {
@@ -125,8 +126,9 @@ namespace MessageApp.Controllers
             }
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetConversationById(int id)
+        [HttpGet("with/{identifier}")]
+        [Authorize]
+        public async Task<IActionResult> GetConversationsWithUser(string identifier)
         {
             try
             {
@@ -137,18 +139,30 @@ namespace MessageApp.Controllers
                     return Unauthorized("User ID not found in token.");
                 }
 
-                var conversation = await _conversationRepository.GetConversationWithMessagesAsync(id, userId);
-                if (conversation == null)
+                // Find the other user by username or email
+                User? otherUser = await _userRepository.GetUserByUsernameAsync(identifier)
+                                ?? await _userRepository.GetUserByEmailAsync(identifier);
+
+                if (otherUser == null)
                 {
-                    return NotFound("Conversation not found or access denied.");
+                    _logger.LogWarning("Target user not found with identifier: {Identifier}", identifier);
+                    return NotFound("Target user not found.");
                 }
 
-                return Ok(conversation);
+                // Get all messages shared between the logged-in user and the identified user
+                var messages = await _conversationRepository.GetMessagesBetweenUsersAsync(userId, otherUser.Id);
+
+                if (messages == null || !messages.Any())
+                {
+                    return NotFound("No messages found between the users.");
+                }
+
+                return Ok(messages);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving conversation with ID {Id}", id);
-                return StatusCode(500, "An error occurred while retrieving the conversation.");
+                _logger.LogError(ex, "Error retrieving messages with user {Identifier}", identifier);
+                return StatusCode(500, "An error occurred while retrieving the messages.");
             }
         }
 

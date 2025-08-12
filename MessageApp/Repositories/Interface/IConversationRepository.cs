@@ -9,7 +9,7 @@ namespace MessageApp.Repositories.Interface
     {
         Task<Conversation> CreateConversationAsync(Conversation conversation);
         Task<bool> ConversationExistsAsync(int user1Id, int user2Id);
-
+        Task<List<Message>> GetMessagesBetweenUsersAsync(int user1Id, int user2Id);
         Task<List<ConversationDto>> GetConversationsForUserAsync(int userId);
         Task<Conversation?> GetConversationBetweenUsersAsync(int user1Id, int user2Id);
 

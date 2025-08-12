@@ -1,3 +1,4 @@
+
 using MessageApp.Data;
 using MessageApp.Dtos;
 using MessageApp.Model;
@@ -44,6 +45,17 @@ namespace MessageApp.Repositories
                 _logger.LogError(ex, "Error creating conversation via stored procedure");
                 throw;
             }
+        }
+
+                public async Task<List<Message>> GetMessagesBetweenUsersAsync(int user1Id, int user2Id)
+        {
+            var user1Param = new SqlParameter("@User1Id", user1Id);
+            var user2Param = new SqlParameter("@User2Id", user2Id);
+
+            return await _context.Messages
+                .FromSqlRaw("EXEC GetMessagesBetweenUsers @User1Id, @User2Id", user1Param, user2Param)
+                .AsNoTracking()
+                .ToListAsync();
         }
 
 
