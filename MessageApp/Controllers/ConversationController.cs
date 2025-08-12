@@ -94,11 +94,8 @@ namespace MessageApp.Controllers
             }
         }
 
-        [HttpGet("All Coversations")]
+        [HttpGet("All-Coversations")]
         [Authorize]
-
-
-        [HttpGet]
         public async Task<IActionResult> GetConversations()
 
         {

@@ -362,9 +362,11 @@ C:\Users\mriteshp\OneDrive - Capgemini\Desktop\BitBucket\messageappbackend\Messa
 C:\Users\mriteshp\OneDrive - Capgemini\Desktop\BitBucket\messageappbackend\MessageApp\obj\Debug\net9.0\MessageApp.pdb
 C:\Users\mriteshp\OneDrive - Capgemini\Desktop\BitBucket\messageappbackend\MessageApp\obj\Debug\net9.0\MessageApp.genruntimeconfig.cache
 C:\Users\mriteshp\OneDrive - Capgemini\Desktop\BitBucket\messageappbackend\MessageApp\obj\Debug\net9.0\ref\MessageApp.dll
+C:\Users\mriteshp\OneDrive - Capgemini\Desktop\BitBucket\messageappbackend\MessageApp\bin\Debug\net9.0\stored_procedures.sql
 C:\Users\anupcjai\Desktop\Anup\Task\messageappbackend\MessageApp\bin\Debug\net9.0\appsettings.Development.json
 C:\Users\anupcjai\Desktop\Anup\Task\messageappbackend\MessageApp\bin\Debug\net9.0\appsettings.json
 C:\Users\anupcjai\Desktop\Anup\Task\messageappbackend\MessageApp\bin\Debug\net9.0\MessageApp.staticwebassets.endpoints.json
+C:\Users\anupcjai\Desktop\Anup\Task\messageappbackend\MessageApp\bin\Debug\net9.0\stored_procedures.sql
 C:\Users\anupcjai\Desktop\Anup\Task\messageappbackend\MessageApp\bin\Debug\net9.0\MessageApp.exe
 C:\Users\anupcjai\Desktop\Anup\Task\messageappbackend\MessageApp\bin\Debug\net9.0\MessageApp.deps.json
 C:\Users\anupcjai\Desktop\Anup\Task\messageappbackend\MessageApp\bin\Debug\net9.0\MessageApp.runtimeconfig.json
@@ -544,4 +546,3 @@ C:\Users\anupcjai\Desktop\Anup\Task\messageappbackend\MessageApp\obj\Debug\net9.
 C:\Users\anupcjai\Desktop\Anup\Task\messageappbackend\MessageApp\obj\Debug\net9.0\MessageApp.pdb
 C:\Users\anupcjai\Desktop\Anup\Task\messageappbackend\MessageApp\obj\Debug\net9.0\MessageApp.genruntimeconfig.cache
 C:\Users\anupcjai\Desktop\Anup\Task\messageappbackend\MessageApp\obj\Debug\net9.0\ref\MessageApp.dll
-C:\Users\mriteshp\OneDrive - Capgemini\Desktop\BitBucket\messageappbackend\MessageApp\bin\Debug\net9.0\stored_procedures.sql

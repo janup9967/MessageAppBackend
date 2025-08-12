@@ -3,7 +3,7 @@ using MessageApp.Helpers;
 using MessageApp.Model;
 using MessageApp.Repositories.Interface;
 using Microsoft.AspNetCore.Mvc;
-using BCrypt.Net;
+
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.SignalR;
@@ -106,8 +106,9 @@ namespace MessageApp.Controllers
             }
         }
 
-        [HttpPut("read/{messageId}")]
-        public async Task<IActionResult> MarkAsRead(int messageId)
+
+        [HttpPut("read")]
+        public async Task<IActionResult> MarkMessagesAsRead([FromBody] List<int> messageIds)
         {
             try
             {
@@ -118,31 +119,40 @@ namespace MessageApp.Controllers
                     return Unauthorized("User ID not found in token.");
                 }
 
-                // Get the message to check ownership
-                var message = await _messageRepository.GetMessageByIdAsync(messageId);
-                if (message == null)
-                    return NotFound("Message not found.");
+                var updatedMessages = new List<Message>();
 
-                if (message.ReceiveId != userId)
+                foreach (var messageId in messageIds)
                 {
-                    _logger.LogWarning("User {UserId} tried to mark message {MessageId} as read but is not the receiver", userId, messageId);
-                    return Forbid("Only the receiver can mark the message as read.");
+                    var message = await _messageRepository.GetMessageByIdAsync(messageId);
+                    if (message == null)
+                    {
+                        _logger.LogWarning("Message {MessageId} not found", messageId);
+                        continue;
+                    }
+
+                    if (message.ReceiveId != userId)
+                    {
+                        _logger.LogWarning("User {UserId} tried to mark message {MessageId} as read but is not the receiver", userId, messageId);
+                        continue;
+                    }
+
+                    var updatedMessage = await _messageRepository.MarkMessageAsReadAsync(messageId);
+                    updatedMessages.Add(updatedMessage);
+
+                    // Notify sender via SignalR
+                    await _hubContext.Clients.User(message.SenderId.ToString())
+                        .SendAsync("ReceiveReadReceipt", new { messageId = message.Id });
                 }
 
-                var updatedMessage = await _messageRepository.MarkMessageAsReadAsync(messageId);
-
-                // Notify sender via SignalR
-                await _hubContext.Clients.User(message.SenderId.ToString())
-                    .SendAsync("ReceiveReadReceipt", new { messageId = message.Id });
-
-                return Ok(updatedMessage);
+                return Ok(updatedMessages);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error marking message as read");
+                _logger.LogError(ex, "Error marking messages as read");
                 return StatusCode(500, "An error occurred.");
             }
         }
+
 
     }
 

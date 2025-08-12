@@ -1,6 +1,7 @@
-using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
+
 using System.Data;
+using MessageApp.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace MessageApp.Helpers
 {
@@ -9,7 +10,7 @@ namespace MessageApp.Helpers
         public static void EnsureStoredProcedures(IServiceProvider services)
         {
             using var scope = services.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<MessageApp.Data.AppDbContext>();
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var connection = context.Database.GetDbConnection();
             connection.Open();
 
