@@ -31,7 +31,7 @@ namespace MessageApp.Controllers
             _logger = logger;
         }
 
-        [HttpPost]
+        [HttpPost("Search&Start")]
         [Authorize]
         public async Task<IActionResult> CreateConversation([FromBody] CreateConversationDto dto)
         {
@@ -93,13 +93,10 @@ namespace MessageApp.Controllers
             }
         }
 
-        [HttpGet]
-<<<<<<< HEAD
+        [HttpGet("All Coversations")]
         [Authorize]
-public async Task<IActionResult> GetConversations()
-=======
+
         public async Task<IActionResult> GetConversations()
->>>>>>> 8b0bf83a93a6609a836e17c9480cff68886f9fec
         {
             try
             {
@@ -127,8 +124,7 @@ public async Task<IActionResult> GetConversations()
             }
         }
 
-<<<<<<< HEAD
-=======
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetConversationById(int id)
         {
@@ -157,7 +153,6 @@ public async Task<IActionResult> GetConversations()
         }
 
 
->>>>>>> 8b0bf83a93a6609a836e17c9480cff68886f9fec
     }
 
 
