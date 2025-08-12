@@ -66,6 +66,11 @@ namespace MessageApp.Repositories
             // For JWT, logout is stateless. Add token blacklist logic here if needed.
             return ApiResponse<object>.SuccessResponse(new { }, "Logout successful");
         }
+
+        public async Task<User> GetUserByIdAsync(int id)
+        {
+            return await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+        }
     }
 
 }

@@ -10,6 +10,7 @@ namespace MessageApp.Repositories.Interface
         Task<User> CreateUserAsync(User user);
         Task<User> GetUserByEmailAsync(string email);
         Task<User> GetUserByUsernameAsync(string username);
+        Task<User> GetUserByIdAsync(int id);
         Task<UserResponseDto> LoginUserAsync(UserLoginDto loginDto);
         Task<ApiResponse<object>> LogoutAsync(string userId);
     }

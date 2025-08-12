@@ -157,7 +157,24 @@ namespace MessageApp.Controllers
                     return NotFound("No messages found between the users.");
                 }
 
-                return Ok(messages);
+                // Map to MessageReturnDto with usernames and avatars
+                var messageDtos = new List<MessageReturnDto>();
+                foreach (var msg in messages)
+                {
+                    var sender = await _userRepository.GetUserByIdAsync(msg.SenderId);
+                    var receiver = await _userRepository.GetUserByIdAsync(msg.ReceiveId);
+                    messageDtos.Add(new MessageReturnDto
+                    {
+                        SenderUsername = sender?.Username ?? "",
+                        ReceiverUsername = receiver?.Username ?? "",
+                        ConversationId = msg.ConversationId,
+                        Content = msg.Content,
+                        Time = msg.Time,
+                        IsRead = msg.IsRead
+                    });
+                }
+
+                return Ok(messageDtos);
             }
             catch (Exception ex)
             {
