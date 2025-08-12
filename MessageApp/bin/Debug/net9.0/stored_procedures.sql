@@ -1,3 +1,19 @@
+-- Get all messages shared between two users
+CREATE PROCEDURE GetMessagesBetweenUsers
+    @User1Id INT,
+    @User2Id INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT *
+    FROM Messages
+    WHERE (SenderId = @User1Id AND ReceiveId = @User2Id)
+       OR (SenderId = @User2Id AND ReceiveId = @User1Id)
+    ORDER BY Time ASC;
+END
+
+
 CREATE PROCEDURE SendMessage
     @SenderId INT,
     @ReceiverId INT,
