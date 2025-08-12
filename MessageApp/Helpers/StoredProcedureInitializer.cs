@@ -14,7 +14,7 @@ namespace MessageApp.Helpers
             var connection = context.Database.GetDbConnection();
             connection.Open();
 
-            var requiredProcedures = new[] { "SendMessage", "CreateConversation", "CheckConversationExists", "GetConversationsForUser", "MarkMessageAsRead" };
+            var requiredProcedures = new[] { "SendMessage", "CreateConversation", "CheckConversationExists", "GetConversationsForUser", "MarkMessageAsRead" , "GetMessagesBetweenUsers"};
             var missingProcedures = new List<string>();
 
             foreach (var proc in requiredProcedures)
