@@ -12,4 +12,14 @@ namespace MessageApp.Dtos
         public string Content { get; set; }
     }
 
+        public class MessageReturnDto
+        {
+            public string SenderUsername { get; set; } = string.Empty;
+            public string ReceiverUsername { get; set; } = string.Empty;
+            public int ConversationId { get; set; }
+            public string Content { get; set; } = string.Empty;
+            public DateTime Time { get; set; }
+            public bool IsRead { get; set; }
+        }
+
 }
