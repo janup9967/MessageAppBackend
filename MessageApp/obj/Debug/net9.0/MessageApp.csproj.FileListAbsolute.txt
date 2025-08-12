@@ -544,3 +544,4 @@ C:\Users\anupcjai\Desktop\Anup\Task\messageappbackend\MessageApp\obj\Debug\net9.
 C:\Users\anupcjai\Desktop\Anup\Task\messageappbackend\MessageApp\obj\Debug\net9.0\MessageApp.pdb
 C:\Users\anupcjai\Desktop\Anup\Task\messageappbackend\MessageApp\obj\Debug\net9.0\MessageApp.genruntimeconfig.cache
 C:\Users\anupcjai\Desktop\Anup\Task\messageappbackend\MessageApp\obj\Debug\net9.0\ref\MessageApp.dll
+C:\Users\mriteshp\OneDrive - Capgemini\Desktop\BitBucket\messageappbackend\MessageApp\bin\Debug\net9.0\stored_procedures.sql

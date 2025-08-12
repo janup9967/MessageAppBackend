@@ -31,7 +31,7 @@ namespace MessageApp.Controllers
             _logger = logger;
         }
 
-        [HttpPost]
+        [HttpPost("Search&Start")]
         [Authorize]
         public async Task<IActionResult> CreateConversation([FromBody] CreateConversationDto dto)
         {
@@ -93,6 +93,10 @@ namespace MessageApp.Controllers
                 return StatusCode(500, "An error occurred while creating the conversation.");
             }
         }
+
+        [HttpGet("All Coversations")]
+        [Authorize]
+
 
         [HttpGet]
         public async Task<IActionResult> GetConversations()
