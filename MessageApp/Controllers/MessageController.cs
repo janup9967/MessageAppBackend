@@ -96,7 +96,6 @@ public async Task<IActionResult> SendMessage([FromBody] CreateMessageDto dto)
         };
 
         var sentMessage = await _messageRepository.SendMessageAsync(message);
-
         var sender = await _userRepository.GetUserByIdAsync(senderId);
 
         var messageDto = new MessageReturnDto
@@ -111,6 +110,9 @@ public async Task<IActionResult> SendMessage([FromBody] CreateMessageDto dto)
             Time = sentMessage.Time,
             IsRead = sentMessage.IsRead
         };
+        
+        await _hubContext.Clients.User(receiver.Id.ToString())
+                        .SendAsync("ReceiveMessage", messageDto);
 
         return Ok(messageDto);
     }
