@@ -13,6 +13,7 @@ using MessageApp.Repositories;
 using Serilog;
 using MessageApp.Data;
 using MessageApp.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +26,7 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials()
+            .SetIsOriginAllowed(_ => true)
     );
 });
 // Configure logging to write to Logs folder
@@ -87,7 +89,7 @@ builder.Services.AddSignalR();
 
 // Register controllers (if using attribute routing)
 builder.Services.AddControllers();
-
+builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IConversationRepository, ConversationRepository>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
