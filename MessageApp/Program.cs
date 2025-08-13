@@ -1,19 +1,14 @@
 // using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
-using System.Data;
-using System.Reflection;
-using Microsoft.EntityFrameworkCore;
-using MessageApp.Model;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using MessageApp.Helpers;
 using MessageApp.Repositories.Interface;
 using MessageApp.Repositories;
-using Serilog;
 using MessageApp.Data;
 using MessageApp.Hubs;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,11 +36,11 @@ builder.Services.AddCors(options =>
 // Register AppDbContext with SQL Server connection string
 
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
 // builder.Services.AddDbContext<AppDbContext>(options =>
-//     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultAnupConnection")));
+//     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultAnupConnection")));
 
 // Register JwtService
 builder.Services.AddScoped<JwtService>();

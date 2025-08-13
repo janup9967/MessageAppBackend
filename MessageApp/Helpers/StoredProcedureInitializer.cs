@@ -3,6 +3,7 @@ using System.Data;
 using MessageApp.Data;
 using Microsoft.EntityFrameworkCore;
 
+
 namespace MessageApp.Helpers
 {
     public static class StoredProcedureInitializer
