@@ -20,11 +20,10 @@ namespace MessageApp.Hubs
                     new List<string> { Context.ConnectionId },
                     (key, existing) =>
                     {
-                        existing.Add(Context.ConnectionId);
+                        if (!existing.Contains(Context.ConnectionId))
+                            existing.Add(Context.ConnectionId);
                         return existing;
                     });
-
-                await Clients.Others.SendAsync("UserOnline", userId);
             }
 
             await base.OnConnectedAsync();
@@ -39,7 +38,6 @@ namespace MessageApp.Hubs
                 if (!connections.Any())
                 {
                     _userConnections.TryRemove(userId.Value, out _);
-                    await Clients.Others.SendAsync("UserOffline", userId);
                 }
             }
 
@@ -48,9 +46,22 @@ namespace MessageApp.Hubs
 
         public async Task SendMessage(int receiverId, object message)
         {
-            if (_userConnections.TryGetValue(receiverId, out var connections))
+            var senderId = GetUserId();
+            if (senderId == null) return;
+
+            // Send to receiver
+            if (_userConnections.TryGetValue(receiverId, out var receiverConnections))
             {
-                foreach (var connId in connections)
+                foreach (var connId in receiverConnections)
+                {
+                    await Clients.Client(connId).SendAsync("ReceiveMessage", message);
+                }
+            }
+
+            // Also send back to sender (so they see their message instantly)
+            if (_userConnections.TryGetValue(senderId.Value, out var senderConnections))
+            {
+                foreach (var connId in senderConnections)
                 {
                     await Clients.Client(connId).SendAsync("ReceiveMessage", message);
                 }
@@ -70,11 +81,12 @@ namespace MessageApp.Hubs
 
         public async Task SendTypingIndicator(int receiverId)
         {
-            if (_userConnections.TryGetValue(receiverId, out var connections))
+            var senderId = GetUserId();
+            if (senderId != null && _userConnections.TryGetValue(receiverId, out var connections))
             {
                 foreach (var connId in connections)
                 {
-                    await Clients.Client(connId).SendAsync("Typing", new { fromUserId = GetUserId() });
+                    await Clients.Client(connId).SendAsync("Typing", new { fromUserId = senderId.Value });
                 }
             }
         }
