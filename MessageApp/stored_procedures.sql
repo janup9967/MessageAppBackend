@@ -115,3 +115,30 @@ BEGIN
     
     SELECT * FROM Messages WHERE Id = @MessageId;
 END
+
+--  Unread Message
+CREATE PROCEDURE GetUnreadMessagesByConversation
+    @ReceiverId INT,
+    @ConversationId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT m.Id,
+           m.SenderId,
+           s.Username AS SenderUsername,
+           m.ReceiveId,
+           r.Username AS ReceiverUsername,
+           m.ConversationId,
+           m.Content,
+           m.Time,
+           m.IsRead
+    FROM Messages m
+    INNER JOIN Users s ON m.SenderId = s.Id
+    INNER JOIN Users r ON m.ReceiveId = r.Id
+    WHERE m.ReceiveId = @ReceiverId
+      AND m.ConversationId = @ConversationId
+      AND m.IsRead = 0
+    ORDER BY m.Time ASC;
+END
+

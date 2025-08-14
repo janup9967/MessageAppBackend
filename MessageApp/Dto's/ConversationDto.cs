@@ -23,5 +23,12 @@ namespace MessageApp.Dtos
         public bool? LastMessageIsRead { get; set; }
     }
 
+    public class UnreadConversationDto
+    {
+        public int ConversationId { get; set; }
+        public string ConversationWith { get; set; } = string.Empty; // Username of other participant
+        public List<UnreadMessageDto> Messages { get; set; } = new List<UnreadMessageDto>();
+    }
+
 
 }

@@ -1,3 +1,4 @@
+using MessageApp.Dtos;
 using MessageApp.Model;
 
 namespace MessageApp.Repositories.Interface
@@ -9,6 +10,8 @@ namespace MessageApp.Repositories.Interface
         Task<Message?> GetMessageByIdAsync(int messageId);
 
         Task<Message> MarkMessageAsReadAsync(int messageId);
+
+        Task<List<UnreadMessageDto>> GetUnreadMessagesByConversationAsync(int receiverId, int conversationId);
     }
 
 }

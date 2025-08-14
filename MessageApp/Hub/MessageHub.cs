@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 using System.Collections.Concurrent;
+using MessageApp.Dtos;
 
 namespace MessageApp.Hubs
 {
@@ -44,52 +45,66 @@ namespace MessageApp.Hubs
             await base.OnDisconnectedAsync(exception);
         }
 
-        public async Task SendMessage(int receiverId, object message)
+        public async Task SendMessage(ChatMessageDto message)
         {
             var senderId = GetUserId();
             if (senderId == null) return;
 
+            message.SenderId = senderId.Value;
+            message.Timestamp = DateTime.UtcNow;
+            message.IsRead = false;
+
             // Send to receiver
-            if (_userConnections.TryGetValue(receiverId, out var receiverConnections))
+            if (_userConnections.TryGetValue(message.ReceiverId, out var receiverConnections))
             {
                 foreach (var connId in receiverConnections)
-                {
                     await Clients.Client(connId).SendAsync("ReceiveMessage", message);
-                }
             }
 
-            // Also send back to sender (so they see their message instantly)
+            // Send to sender devices
             if (_userConnections.TryGetValue(senderId.Value, out var senderConnections))
             {
                 foreach (var connId in senderConnections)
-                {
                     await Clients.Client(connId).SendAsync("ReceiveMessage", message);
-                }
             }
         }
 
-        public async Task SendReadReceipt(int messageId, int senderId)
+
+
+        public async Task SendReadReceipt(int messageId, int originalSenderId)
         {
-            if (_userConnections.TryGetValue(senderId, out var connections))
-            {
-                foreach (var connId in connections)
-                {
-                    await Clients.Client(connId).SendAsync("ReceiveReadReceipt", new { messageId });
-                }
-            }
+            var readerId = GetUserId();
+            if (readerId == null) return;
+
+            var connectionsToNotify = new List<string>();
+
+            // Add reader's devices
+            if (_userConnections.TryGetValue(readerId.Value, out var readerConnections))
+                connectionsToNotify.AddRange(readerConnections);
+
+            // Add original sender's devices
+            if (_userConnections.TryGetValue(originalSenderId, out var senderConnections))
+                connectionsToNotify.AddRange(senderConnections);
+
+            connectionsToNotify = connectionsToNotify.Distinct().ToList();
+
+            foreach (var connId in connectionsToNotify)
+                await Clients.Client(connId).SendAsync("ReceiveReadReceipt", new { messageId });
         }
 
-        public async Task SendTypingIndicator(int receiverId)
-        {
-            var senderId = GetUserId();
-            if (senderId != null && _userConnections.TryGetValue(receiverId, out var connections))
-            {
-                foreach (var connId in connections)
-                {
-                    await Clients.Client(connId).SendAsync("Typing", new { fromUserId = senderId.Value });
-                }
-            }
-        }
+
+
+        // public async Task SendTypingIndicator(int receiverId)
+        // {
+        //     var senderId = GetUserId();
+        //     if (senderId != null && _userConnections.TryGetValue(receiverId, out var connections))
+        //     {
+        //         foreach (var connId in connections)
+        //         {
+        //             await Clients.Client(connId).SendAsync("Typing", new { fromUserId = senderId.Value });
+        //         }
+        //     }
+        // }
 
         private int? GetUserId()
         {
