@@ -6,11 +6,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace MessageApp.Migrations
 {
     /// <inheritdoc />
-<<<<<<<< HEAD:MessageApp/Migrations/20250813123616_initialCreate.cs
-    public partial class initialCreate : Migration
-========
+
     public partial class InitialCreate : Migration
->>>>>>>> 2c8a5845d7d9b8f23638886aa86e0cd3b23b53a3:MessageApp/Migrations/20250813123148_InitialCreate.cs
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
