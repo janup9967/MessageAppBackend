@@ -25,7 +25,14 @@ namespace MessageApp.Hubs
                             existing.Add(Context.ConnectionId);
                         return existing;
                     });
+                Console.WriteLine($"✅ User {userId} connected with ID {Context.ConnectionId}");
+
             }
+            else
+            {
+                Console.WriteLine("❌ Connection failed: User ID not found in claims.");
+            }
+
 
             await base.OnConnectedAsync();
         }
@@ -40,6 +47,8 @@ namespace MessageApp.Hubs
                 {
                     _userConnections.TryRemove(userId.Value, out _);
                 }
+                Console.WriteLine($"🔌 User {userId} disconnected from ID {Context.ConnectionId}");
+
             }
 
             await base.OnDisconnectedAsync(exception);
@@ -48,24 +57,53 @@ namespace MessageApp.Hubs
         public async Task SendMessage(ChatMessageDto message)
         {
             var senderId = GetUserId();
-            if (senderId == null) return;
+            if (senderId == null)
+            {
+                Console.WriteLine("❌ SendMessage failed: Sender ID not found.");
+                return;
+
+            }
+            Console.WriteLine($"📤 Message from {senderId} to {message.ReceiverId}: {message.Content}");
+
 
             message.SenderId = senderId.Value;
             message.Timestamp = DateTime.UtcNow;
             message.IsRead = false;
 
+            Console.WriteLine($"📤 Message from {senderId} to {message.ReceiverId}: {message.Content}");
+            var connectionsToNotify = new List<string>();
+
+
             // Send to receiver
-            if (_userConnections.TryGetValue(message.ReceiverId, out var receiverConnections))
-            {
-                foreach (var connId in receiverConnections)
-                    await Clients.Client(connId).SendAsync("ReceiveMessage", message);
-            }
+            // if (_userConnections.TryGetValue(message.ReceiverId, out var receiverConnections))
+            // {
+            //     foreach (var connId in receiverConnections)
+            //         await Clients.Client(connId).SendAsync("ReceiveMessage", message);
+            // }
 
             // Send to sender devices
+            // if (_userConnections.TryGetValue(senderId.Value, out var senderConnections))
+            // {
+            //     foreach (var connId in senderConnections)
+            //         await Clients.Client(connId).SendAsync("ReceiveMessage", message);
+            // }
+
+            // Receiver's devices
+            if (_userConnections.TryGetValue(message.ReceiverId, out var receiverConnections))
+            {
+                connectionsToNotify.AddRange(receiverConnections);
+            }
+
+            // Sender's devices
             if (_userConnections.TryGetValue(senderId.Value, out var senderConnections))
             {
-                foreach (var connId in senderConnections)
-                    await Clients.Client(connId).SendAsync("ReceiveMessage", message);
+                connectionsToNotify.AddRange(senderConnections);
+            }
+
+            foreach (var connId in connectionsToNotify.Distinct())
+            {
+                await Clients.Client(connId).SendAsync("ReceiveMessage", message);
+                Console.WriteLine($"📨 Sent message to connection: {connId}");
             }
         }
 
@@ -74,8 +112,11 @@ namespace MessageApp.Hubs
         public async Task SendReadReceipt(int messageId, int originalSenderId)
         {
             var readerId = GetUserId();
-            if (readerId == null) return;
-
+            if (readerId == null)
+            {
+                Console.WriteLine("❌ SendReadReceipt failed: Reader ID not found.");
+                return;
+            }
             var connectionsToNotify = new List<string>();
 
             // Add reader's devices
@@ -89,8 +130,14 @@ namespace MessageApp.Hubs
             connectionsToNotify = connectionsToNotify.Distinct().ToList();
 
             foreach (var connId in connectionsToNotify)
+            {
                 await Clients.Client(connId).SendAsync("ReceiveReadReceipt", new { messageId });
+                Console.WriteLine($"📖 Sent read receipt for message {messageId} to connection: {connId}");
+            }
+
         }
+
+        
 
 
 
