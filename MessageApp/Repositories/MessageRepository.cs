@@ -1,4 +1,5 @@
 using MessageApp.Data;
+using MessageApp.Dtos;
 using MessageApp.Model;
 using MessageApp.Repositories.Interface;
 using Microsoft.Data.SqlClient;
@@ -72,6 +73,51 @@ namespace MessageApp.Repositories
 
             return result.FirstOrDefault();
         }
+
+        // ✅ Get all unread messages for a receiver
+        public async Task<List<UnreadMessageDto>> GetUnreadMessagesByConversationAsync(int receiverId, int conversationId)
+        {
+            var receiverParam = new SqlParameter("@ReceiverId", receiverId);
+            var conversationParam = new SqlParameter("@ConversationId", conversationId);
+
+            // Execute stored procedure directly on Messages table
+            var messages = await _context.Messages
+                .FromSqlRaw("EXEC GetUnreadMessagesByConversation @ReceiverId, @ConversationId",
+                    receiverParam, conversationParam)
+                .AsNoTracking()
+                .ToListAsync(); // materialize immediately (no further LINQ here)
+
+            // Now you can map to DTO (in memory)
+            var senderIds = messages.Select(m => m.SenderId).Distinct().ToList();
+            var receiverIds = messages.Select(m => m.ReceiveId).Distinct().ToList();
+
+            var senders = await _context.Users
+                .Where(u => senderIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id, u => u.Username);
+
+            var receivers = await _context.Users
+                .Where(u => receiverIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id, u => u.Username);
+
+            var result = messages.Select(m => new UnreadMessageDto
+            {
+                Id = m.Id,
+                SenderId = m.SenderId,
+                SenderUsername = senders.ContainsKey(m.SenderId) ? senders[m.SenderId] : "",
+                ReceiverId = m.ReceiveId,
+                ReceiverUsername = receivers.ContainsKey(m.ReceiveId) ? receivers[m.ReceiveId] : "",
+                Content = m.Content,
+                Time = m.Time,
+                IsRead = m.IsRead,
+                ConversationId = m.ConversationId
+            }).ToList();
+
+            return result;
+        }
+
+
+
+
 
 
 

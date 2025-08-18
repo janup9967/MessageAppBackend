@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 using System.Collections.Concurrent;
+using MessageApp.Dtos;
 
 namespace MessageApp.Hubs
 {
@@ -24,7 +25,14 @@ namespace MessageApp.Hubs
                             existing.Add(Context.ConnectionId);
                         return existing;
                     });
+                Console.WriteLine($"✅ User {userId} connected with ID {Context.ConnectionId}");
+
             }
+            else
+            {
+                Console.WriteLine("❌ Connection failed: User ID not found in claims.");
+            }
+
 
             await base.OnConnectedAsync();
         }
@@ -39,57 +47,111 @@ namespace MessageApp.Hubs
                 {
                     _userConnections.TryRemove(userId.Value, out _);
                 }
+                Console.WriteLine($"🔌 User {userId} disconnected from ID {Context.ConnectionId}");
+
             }
 
             await base.OnDisconnectedAsync(exception);
         }
 
-        public async Task SendMessage(int receiverId, object message)
+        public async Task SendMessage(ChatMessageDto message)
         {
             var senderId = GetUserId();
-            if (senderId == null) return;
+            if (senderId == null)
+            {
+                Console.WriteLine("❌ SendMessage failed: Sender ID not found.");
+                return;
+
+            }
+            Console.WriteLine($"📤 Message from {senderId} to {message.ReceiverId}: {message.Content}");
+
+
+            message.SenderId = senderId.Value;
+            message.Timestamp = DateTime.UtcNow;
+            message.IsRead = false;
+
+            Console.WriteLine($"📤 Message from {senderId} to {message.ReceiverId}: {message.Content}");
+            var connectionsToNotify = new List<string>();
+
 
             // Send to receiver
-            if (_userConnections.TryGetValue(receiverId, out var receiverConnections))
+            // if (_userConnections.TryGetValue(message.ReceiverId, out var receiverConnections))
+            // {
+            //     foreach (var connId in receiverConnections)
+            //         await Clients.Client(connId).SendAsync("ReceiveMessage", message);
+            // }
+
+            // Send to sender devices
+            // if (_userConnections.TryGetValue(senderId.Value, out var senderConnections))
+            // {
+            //     foreach (var connId in senderConnections)
+            //         await Clients.Client(connId).SendAsync("ReceiveMessage", message);
+            // }
+
+            // Receiver's devices
+            if (_userConnections.TryGetValue(message.ReceiverId, out var receiverConnections))
             {
-                foreach (var connId in receiverConnections)
-                {
-                    await Clients.Client(connId).SendAsync("ReceiveMessage", message);
-                }
+                connectionsToNotify.AddRange(receiverConnections);
             }
 
-            // Also send back to sender (so they see their message instantly)
+            // Sender's devices
             if (_userConnections.TryGetValue(senderId.Value, out var senderConnections))
             {
-                foreach (var connId in senderConnections)
-                {
-                    await Clients.Client(connId).SendAsync("ReceiveMessage", message);
-                }
+                connectionsToNotify.AddRange(senderConnections);
+            }
+
+            foreach (var connId in connectionsToNotify.Distinct())
+            {
+                await Clients.Client(connId).SendAsync("ReceiveMessage", message);
+                Console.WriteLine($"📨 Sent message to connection: {connId}");
             }
         }
 
-        public async Task SendReadReceipt(int messageId, int senderId)
+
+
+        public async Task SendReadReceipt(int messageId, int originalSenderId)
         {
-            if (_userConnections.TryGetValue(senderId, out var connections))
+            var readerId = GetUserId();
+            if (readerId == null)
             {
-                foreach (var connId in connections)
-                {
-                    await Clients.Client(connId).SendAsync("ReceiveReadReceipt", new { messageId });
-                }
+                Console.WriteLine("❌ SendReadReceipt failed: Reader ID not found.");
+                return;
             }
+            var connectionsToNotify = new List<string>();
+
+            // Add reader's devices
+            if (_userConnections.TryGetValue(readerId.Value, out var readerConnections))
+                connectionsToNotify.AddRange(readerConnections);
+
+            // Add original sender's devices
+            if (_userConnections.TryGetValue(originalSenderId, out var senderConnections))
+                connectionsToNotify.AddRange(senderConnections);
+
+            connectionsToNotify = connectionsToNotify.Distinct().ToList();
+
+            foreach (var connId in connectionsToNotify)
+            {
+                await Clients.Client(connId).SendAsync("ReceiveReadReceipt", new { messageId });
+                Console.WriteLine($"📖 Sent read receipt for message {messageId} to connection: {connId}");
+            }
+
         }
 
-        public async Task SendTypingIndicator(int receiverId)
-        {
-            var senderId = GetUserId();
-            if (senderId != null && _userConnections.TryGetValue(receiverId, out var connections))
-            {
-                foreach (var connId in connections)
-                {
-                    await Clients.Client(connId).SendAsync("Typing", new { fromUserId = senderId.Value });
-                }
-            }
-        }
+        
+
+
+
+        // public async Task SendTypingIndicator(int receiverId)
+        // {
+        //     var senderId = GetUserId();
+        //     if (senderId != null && _userConnections.TryGetValue(receiverId, out var connections))
+        //     {
+        //         foreach (var connId in connections)
+        //         {
+        //             await Clients.Client(connId).SendAsync("Typing", new { fromUserId = senderId.Value });
+        //         }
+        //     }
+        // }
 
         private int? GetUserId()
         {

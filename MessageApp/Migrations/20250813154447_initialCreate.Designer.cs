@@ -12,8 +12,13 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MessageApp.Migrations
 {
     [DbContext(typeof(AppDbContext))]
+<<<<<<< HEAD:MessageApp/Migrations/20250813154447_initialCreate.Designer.cs
     [Migration("20250813154447_initialCreate")]
     partial class initialCreate
+=======
+    [Migration("20250813123148_InitialCreate")]
+    partial class InitialCreate
+>>>>>>> bcecc1c0cef2c35bfc3ce0b357cad6c1b62557dd:MessageApp/Migrations/20250813123148_InitialCreate.Designer.cs
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

@@ -12,6 +12,12 @@ Register Body
   "password": "Madhur@1234"
 }
 
+{
+  "username": "Hero",
+  "email": "hero@example.com",
+  "password": "Hero1234@"
+}
+
 login Body
 
 {
