@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using BCrypt.Net;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using Microsoft.AspNetCore.SignalR;
+using MessageApp.Hubs;
 
 
 
@@ -20,15 +22,18 @@ namespace MessageApp.Controllers
         private readonly IConversationRepository _conversationRepository;
         private readonly IUserRepository _userRepository;
         private readonly ILogger<ConversationsController> _logger;
+        private readonly IHubContext<MessageHub> _hubContext;
 
         public ConversationsController(
             IConversationRepository conversationRepository,
             IUserRepository userRepository,
-            ILogger<ConversationsController> logger)
+            ILogger<ConversationsController> logger,
+            IHubContext<MessageHub> hubContext)
         {
             _conversationRepository = conversationRepository;
             _userRepository = userRepository;
             _logger = logger;
+            _hubContext = hubContext;
         }
 
         [HttpPost("Search&Start")]
@@ -184,9 +189,35 @@ namespace MessageApp.Controllers
         }
 
 
+
+        [HttpPost("mark-read/{conversationId}")]
+        public async Task<IActionResult> MarkConversationRead(int conversationId)
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                {
+                    return Unauthorized("User ID not found in token.");
+                }
+
+                await _conversationRepository.MarkConversationAsReadAsync(conversationId, userId);
+
+                // 🔔 notify other clients in this conversation
+                await _hubContext.Clients.Group(conversationId.ToString())
+                    .SendAsync("ConversationRead", new { conversationId, userId });
+
+                return Ok(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error marking conversation {ConversationId} as read", conversationId);
+                return StatusCode(500, "An error occurred while marking the conversation as read.");
+            }
+
+
+
+
+        }
     }
-
-
-
-
 }

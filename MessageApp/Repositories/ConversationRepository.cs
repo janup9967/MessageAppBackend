@@ -144,6 +144,34 @@ namespace MessageApp.Repositories
                     (c.CreatedByUser == userId || c.ReceiveId == userId));
         }
 
+        public async Task MarkConversationAsReadAsync(int conversationId, int userId)
+        {
+            try
+            {
+                var messages = await _context.Messages
+                    .Where(m => m.ConversationId == conversationId && m.ReceiveId == userId && !m.IsRead)
+                    .ToListAsync();
+
+                if (messages.Any())
+                {
+                    foreach (var msg in messages)
+                    {
+                        msg.IsRead = true;
+                    }
+
+                    await _context.SaveChangesAsync();
+                    _logger.LogInformation("Marked {Count} messages as read in conversation {ConversationId} for user {UserId}",
+                        messages.Count, conversationId, userId);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error marking conversation {ConversationId} as read for user {UserId}", conversationId, userId);
+                throw;
+            }
+        }
+
+
 
     }
 
