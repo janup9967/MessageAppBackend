@@ -1,6 +1,10 @@
 {
   "version": 2,
+<<<<<<< HEAD
+  "dgSpecHash": "ayTbH/HFE4I=",
+=======
   "dgSpecHash": "VANmoyPISW4=",
+>>>>>>> 1762c31abe25cc6c849c43bd57dca1387d6286e1
   "success": true,
   "projectFilePath": "C:\\Users\\mriteshp\\OneDrive - Capgemini\\Desktop\\BitBucket\\messageappbackend\\MessageApp\\MessageApp.csproj",
   "expectedPackageFiles": [
