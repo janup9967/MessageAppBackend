@@ -85,15 +85,17 @@ namespace MessageApp.Controllers
                     await _conversationRepository.CreateConversationAsync(conversation);
                 }
 
-                var message = new Message
-                {
-                    SenderId = senderId,
-                    ReceiveId = receiver.Id,
-                    ConversationId = conversation.Id,
-                    Content = dto.Content,
-                    Time = DateTime.UtcNow,
-                    IsRead = false
-                };
+           var message = new Message
+{
+    SenderId = senderId,
+    ReceiveId = receiver.Id,
+    ConversationId = conversation.Id,
+    Content = dto.Content,
+    Time = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow,
+        TimeZoneInfo.FindSystemTimeZoneById("India Standard Time")), // ✅ IST time
+    IsRead = false
+};
+
 
                 var sentMessage = await _messageRepository.SendMessageAsync(message);
                 var sender = await _userRepository.GetUserByIdAsync(senderId);
