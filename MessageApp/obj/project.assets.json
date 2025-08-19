@@ -6504,7 +6504,11 @@
       "code": "Undefined",
       "level": "Warning",
       "warningLevel": 1,
+<<<<<<< HEAD
       "message": "Problem reading the cache file C:\\Users\\anupcjai\\Desktop\\Anup\\Task\\messageappbackend\\MessageApp\\obj\\project.nuget.cache : Invalid property identifier character: <. Path 'version', line 3, position 0."
+=======
+      "message": "Problem reading the cache file C:\\Users\\mriteshp\\OneDrive - Capgemini\\Desktop\\BitBucket\\messageappbackend\\MessageApp\\obj\\project.nuget.cache : Invalid property identifier character: <. Path 'version', line 3, position 0."
+>>>>>>> be36b2f9d1ff467cc7f11bad2de93818805284be
     }
   ]
 }
