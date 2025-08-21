@@ -109,7 +109,7 @@ namespace MessageApp.Hubs
 
 
 
-        public async Task SendReadReceipt(int messageId, int originalSenderId)
+        public async Task SendReadReceipt(int messageId, int originalSenderId, int conversationId)
         {
             var readerId = GetUserId();
             if (readerId == null)
@@ -131,8 +131,8 @@ namespace MessageApp.Hubs
 
             foreach (var connId in connectionsToNotify)
             {
-                await Clients.Client(connId).SendAsync("ReceiveReadReceipt", new { messageId });
-                Console.WriteLine($"📖 Sent read receipt for message {messageId} to connection: {connId}");
+                await Clients.Client(connId).SendAsync("ReceiveReadReceipt", new { messageId , conversationId});
+                Console.WriteLine($"📖 Sent read receipt for message {messageId} in conversation {conversationId} to connection: {connId}");
             }
 
         }
