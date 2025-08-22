@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace MessageApp.Controllers
 {
 
-    
+
     [ApiController]
     [Route("api/[controller]")]
     public class UserController : ControllerBase
@@ -92,7 +92,7 @@ namespace MessageApp.Controllers
 
         [HttpGet("exists")]
         [Authorize]
-public async Task<IActionResult> CheckUserExists([FromQuery] string identifier)
+        public async Task<IActionResult> CheckUserExists([FromQuery] string identifier)
         {
             if (string.IsNullOrWhiteSpace(identifier))
                 return BadRequest(new { Message = "Identifier (email or username) is required." });
