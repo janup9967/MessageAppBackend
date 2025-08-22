@@ -19,7 +19,7 @@ namespace MessageApp.Dtos
         public DateTime CreatedAt { get; set; }
 
         public string? LastMessageContent { get; set; }
-        public DateTime? LastMessageTime { get; set; }
+        public DateTime? LastMessageTime { get; set; } = DateTime.UtcNow;
         public bool? LastMessageIsRead { get; set; }
     }
 

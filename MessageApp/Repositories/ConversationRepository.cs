@@ -81,49 +81,59 @@ namespace MessageApp.Repositories
         }
 
 
-        public async Task<List<ConversationDto>> GetConversationsForUserAsync(int userId)
+       public async Task<List<ConversationDto>> GetConversationsForUserAsync(int userId)
+{
+    try
+    {
+        var istZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
+
+        var conversations = await _context.Conversations
+            .Where(c => c.CreatedByUser == userId || c.ReceiveId == userId)
+            .ToListAsync();
+
+        var conversationDtos = conversations.Select(c =>
         {
-            try
-            {
-                return await _context.Conversations
-                    .Where(c => c.CreatedByUser == userId || c.ReceiveId == userId)
-                    .Select(c => new ConversationDto
-                    {
-                        Id = c.Id,
-                        SenderUsername = c.CreatedByUser == userId ? _context.Users.Where(u => u.Id == userId).Select(u => u.Username).FirstOrDefault()
-                                                                   : _context.Users.Where(u => u.Id == c.CreatedByUser).Select(u => u.Username).FirstOrDefault(),
-                        ReceiverUsername = c.ReceiveId == userId ? _context.Users.Where(u => u.Id == userId).Select(u => u.Username).FirstOrDefault()
-                                                                 : _context.Users.Where(u => u.Id == c.ReceiveId).Select(u => u.Username).FirstOrDefault(),
-                        CreatedAt = c.CreatedAt,
-                        LastMessageContent = _context.Messages
-                            .Where(m => m.ConversationId == c.Id)
-                            .OrderByDescending(m => m.Time)
-                            .Select(m => m.Content)
-                            .FirstOrDefault(),
-                        LastMessageTime = _context.Messages
-                            .Where(m => m.ConversationId == c.Id)
-                            .OrderByDescending(m => m.Time)
-                            .Select(m => m.Time)
-                            .FirstOrDefault(),
-                        LastMessageIsRead = _context.Messages
-                            .Where(m => m.ConversationId == c.Id)
-                            .OrderByDescending(m => m.Time)
-                            .Select(m => m.IsRead)
-                            .FirstOrDefault(),
+            var lastMessage = _context.Messages
+                .Where(m => m.ConversationId == c.Id)
+                .OrderByDescending(m => m.Time)
+                .FirstOrDefault();
 
-                        DisplayName = c.CreatedByUser == userId
-                                            ? _context.Users.Where(u => u.Id == c.ReceiveId).Select(u => u.Username).FirstOrDefault()
-                                            : _context.Users.Where(u => u.Id == c.CreatedByUser).Select(u => u.Username).FirstOrDefault()
-                    })
+            var senderUsername = c.CreatedByUser == userId
+                ? _context.Users.Where(u => u.Id == userId).Select(u => u.Username).FirstOrDefault()
+                : _context.Users.Where(u => u.Id == c.CreatedByUser).Select(u => u.Username).FirstOrDefault();
 
-                    .ToListAsync();
-            }
-            catch (Exception ex)
+            var receiverUsername = c.ReceiveId == userId
+                ? _context.Users.Where(u => u.Id == userId).Select(u => u.Username).FirstOrDefault()
+                : _context.Users.Where(u => u.Id == c.ReceiveId).Select(u => u.Username).FirstOrDefault();
+
+            var displayName = c.CreatedByUser == userId
+                ? _context.Users.Where(u => u.Id == c.ReceiveId).Select(u => u.Username).FirstOrDefault()
+                : _context.Users.Where(u => u.Id == c.CreatedByUser).Select(u => u.Username).FirstOrDefault();
+
+            return new ConversationDto
             {
-                _logger.LogError(ex, "Error fetching conversations for user {UserId}", userId);
-                throw;
-            }
-        }
+                Id = c.Id,
+                SenderUsername = senderUsername,
+                ReceiverUsername = receiverUsername,
+                CreatedAt = TimeZoneInfo.ConvertTimeFromUtc(c.CreatedAt, istZone),
+                LastMessageContent = lastMessage?.Content,
+                LastMessageTime = lastMessage != null
+                    ? TimeZoneInfo.ConvertTimeFromUtc(lastMessage.Time, istZone)
+                    : (DateTime?)null,
+                LastMessageIsRead = lastMessage?.IsRead ?? false,
+                DisplayName = displayName
+            };
+        }).ToList();
+
+        return conversationDtos;
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error fetching conversations for user {UserId}", userId);
+        throw;
+    }
+}
+
 
 
 
