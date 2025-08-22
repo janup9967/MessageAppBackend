@@ -81,12 +81,10 @@ namespace MessageApp.Repositories
         }
 
 
-       public async Task<List<ConversationDto>> GetConversationsForUserAsync(int userId)
+public async Task<List<ConversationDto>> GetConversationsForUserAsync(int userId)
 {
     try
     {
-        var istZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
-
         var conversations = await _context.Conversations
             .Where(c => c.CreatedByUser == userId || c.ReceiveId == userId)
             .ToListAsync();
@@ -115,11 +113,9 @@ namespace MessageApp.Repositories
                 Id = c.Id,
                 SenderUsername = senderUsername,
                 ReceiverUsername = receiverUsername,
-                CreatedAt = TimeZoneInfo.ConvertTimeFromUtc(c.CreatedAt, istZone),
+                CreatedAt = c.CreatedAt, // UTC
                 LastMessageContent = lastMessage?.Content,
-                LastMessageTime = lastMessage != null
-                    ? TimeZoneInfo.ConvertTimeFromUtc(lastMessage.Time, istZone)
-                    : (DateTime?)null,
+                LastMessageTime = lastMessage?.Time, // UTC
                 LastMessageIsRead = lastMessage?.IsRead ?? false,
                 DisplayName = displayName
             };
@@ -133,7 +129,6 @@ namespace MessageApp.Repositories
         throw;
     }
 }
-
 
 
 
