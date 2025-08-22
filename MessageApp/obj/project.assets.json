@@ -6391,19 +6391,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\mriteshp\\.nuget\\packages\\": {}
+    "C:\\Users\\anupcjai\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\mriteshp\\OneDrive - Capgemini\\Desktop\\BitBucket\\messageappbackend\\MessageApp\\MessageApp.csproj",
+      "projectUniqueName": "C:\\Users\\anupcjai\\Desktop\\Anup\\Task\\messageappbackend\\MessageApp\\MessageApp.csproj",
       "projectName": "MessageApp",
-      "projectPath": "C:\\Users\\mriteshp\\OneDrive - Capgemini\\Desktop\\BitBucket\\messageappbackend\\MessageApp\\MessageApp.csproj",
-      "packagesPath": "C:\\Users\\mriteshp\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\mriteshp\\OneDrive - Capgemini\\Desktop\\BitBucket\\messageappbackend\\MessageApp\\obj\\",
+      "projectPath": "C:\\Users\\anupcjai\\Desktop\\Anup\\Task\\messageappbackend\\MessageApp\\MessageApp.csproj",
+      "packagesPath": "C:\\Users\\anupcjai\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\anupcjai\\Desktop\\Anup\\Task\\messageappbackend\\MessageApp\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\mriteshp\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\anupcjai\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
@@ -6498,7 +6498,6 @@
         "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.109/PortableRuntimeIdentifierGraph.json"
       }
     }
-<<<<<<< HEAD
   },
   "logs": [
     {
@@ -6508,7 +6507,4 @@
       "message": "Problem reading the cache file C:\\Users\\anupcjai\\Desktop\\Anup\\Task\\messageappbackend\\MessageApp\\obj\\project.nuget.cache : Invalid property identifier character: <. Path 'version', line 3, position 0."
     }
   ]
-=======
-  }
->>>>>>> d04c51253063d29f7072a8ad6e8e4e7666002fe0
 }
