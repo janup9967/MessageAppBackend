@@ -1,16 +1,12 @@
-
 using MessageApp.Dtos;
 using MessageApp.Helpers;
 using MessageApp.Model;
 using MessageApp.Repositories.Interface;
 using Microsoft.AspNetCore.Mvc;
-using BCrypt.Net;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.SignalR;
 using MessageApp.Hubs;
-
-
 
 namespace MessageApp.Controllers
 {
@@ -19,6 +15,8 @@ namespace MessageApp.Controllers
     [Authorize]
     public class ConversationsController : ControllerBase
     {
+        #region 1. Fields & Constructor
+
         private readonly IConversationRepository _conversationRepository;
         private readonly IUserRepository _userRepository;
         private readonly ILogger<ConversationsController> _logger;
@@ -36,8 +34,11 @@ namespace MessageApp.Controllers
             _hubContext = hubContext;
         }
 
+        #endregion
+
+        #region 2. Create Conversation
+
         [HttpPost("Search&Start")]
-        [Authorize]
         public async Task<IActionResult> CreateConversation([FromBody] CreateConversationDto dto)
         {
             if (!ModelState.IsValid)
@@ -48,37 +49,20 @@ namespace MessageApp.Controllers
 
             try
             {
-                // Get current user ID from claims
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int createdByUserId))
-                {
-                    _logger.LogWarning("User ID claim not found or invalid");
-                    return Unauthorized("User ID not found in token.");
-                }
+                var createdByUserId = GetUserIdFromClaims();
 
-                // Find receiver by username or email
-                User? receiver = await _userRepository.GetUserByUsernameAsync(dto.ReceiverIdentifier)
-                                ?? await _userRepository.GetUserByEmailAsync(dto.ReceiverIdentifier);
+                var receiver = await _userRepository.GetUserByUsernameAsync(dto.ReceiverIdentifier)
+                              ?? await _userRepository.GetUserByEmailAsync(dto.ReceiverIdentifier);
 
                 if (receiver == null)
-                {
-                    _logger.LogWarning("Receiver not found with identifier: {Identifier}", dto.ReceiverIdentifier);
                     return NotFound("Receiver not found.");
-                }
 
                 if (createdByUserId == receiver.Id)
-                {
-                    _logger.LogWarning("User tried to create a conversation with themselves");
                     return BadRequest("Cannot create a conversation with yourself.");
-                }
 
-                // Try to get existing conversation
                 var existingConversation = await _conversationRepository.GetConversationBetweenUsersAsync(createdByUserId, receiver.Id);
                 if (existingConversation != null)
-                {
-                    _logger.LogInformation("Conversation already exists between users {User1} and {User2}", createdByUserId, receiver.Id);
                     return Ok(existingConversation);
-                }
 
                 var conversation = new Conversation
                 {
@@ -88,39 +72,29 @@ namespace MessageApp.Controllers
                 };
 
                 var created = await _conversationRepository.CreateConversationAsync(conversation);
-                _logger.LogInformation("Conversation created successfully with ID {Id}", created.Id);
-
                 return CreatedAtAction(nameof(CreateConversation), new { id = created.Id }, created);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error occurred while creating conversation");
+                _logger.LogError(ex, "Error creating conversation");
                 return StatusCode(500, "An error occurred while creating the conversation.");
             }
         }
 
+        #endregion
+
+        #region 3. Get Conversations
+
         [HttpGet("All-Coversations")]
-        [Authorize]
-
         public async Task<IActionResult> GetConversations()
-
         {
             try
             {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
-                {
-                    _logger.LogWarning("User ID claim not found or invalid");
-                    return Unauthorized("User ID not found in token.");
-                }
-
+                var userId = GetUserIdFromClaims();
                 var conversations = await _conversationRepository.GetConversationsForUserAsync(userId);
 
                 if (conversations == null || !conversations.Any())
-                {
-                    _logger.LogInformation("No conversations found for user {UserId}", userId);
                     return NotFound("No conversations found.");
-                }
 
                 return Ok(conversations);
             }
@@ -132,42 +106,29 @@ namespace MessageApp.Controllers
         }
 
         [HttpGet("with/{identifier}")]
-        [Authorize]
         public async Task<IActionResult> GetConversationsWithUser(string identifier)
         {
             try
             {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
-                {
-                    _logger.LogWarning("User ID claim not found or invalid");
-                    return Unauthorized("User ID not found in token.");
-                }
+                var userId = GetUserIdFromClaims();
 
-                // Find the other user by username or email
-                User? otherUser = await _userRepository.GetUserByUsernameAsync(identifier)
+                var otherUser = await _userRepository.GetUserByUsernameAsync(identifier)
                                 ?? await _userRepository.GetUserByEmailAsync(identifier);
 
                 if (otherUser == null)
-                {
-                    _logger.LogWarning("Target user not found with identifier: {Identifier}", identifier);
                     return NotFound("Target user not found.");
-                }
 
-                // Get all messages shared between the logged-in user and the identified user
                 var messages = await _conversationRepository.GetMessagesBetweenUsersAsync(userId, otherUser.Id);
 
                 if (messages == null || !messages.Any())
-                {
                     return NotFound("No messages found between the users.");
-                }
 
-                // Map to MessageReturnDto with usernames and avatars
                 var messageDtos = new List<MessageReturnDto>();
                 foreach (var msg in messages)
                 {
                     var sender = await _userRepository.GetUserByIdAsync(msg.SenderId);
                     var receiver = await _userRepository.GetUserByIdAsync(msg.ReceiveId);
+
                     messageDtos.Add(new MessageReturnDto
                     {
                         SenderUsername = sender?.Username ?? "",
@@ -188,22 +149,19 @@ namespace MessageApp.Controllers
             }
         }
 
+        #endregion
 
+        #region 4. Mark Conversation Read
 
         [HttpPost("mark-read/{conversationId}")]
         public async Task<IActionResult> MarkConversationRead(int conversationId)
         {
             try
             {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
-                {
-                    return Unauthorized("User ID not found in token.");
-                }
+                var userId = GetUserIdFromClaims();
 
                 await _conversationRepository.MarkConversationAsReadAsync(conversationId, userId);
 
-                // 🔔 notify other clients in this conversation
                 await _hubContext.Clients.Group(conversationId.ToString())
                     .SendAsync("ConversationRead", new { conversationId, userId });
 
@@ -214,10 +172,21 @@ namespace MessageApp.Controllers
                 _logger.LogError(ex, "Error marking conversation {ConversationId} as read", conversationId);
                 return StatusCode(500, "An error occurred while marking the conversation as read.");
             }
-
-
-
-
         }
+
+        #endregion
+
+        #region 5. Private Helpers
+
+        private int GetUserIdFromClaims()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+                throw new UnauthorizedAccessException("User ID not found in token.");
+
+            return userId;
+        }
+
+        #endregion
     }
 }

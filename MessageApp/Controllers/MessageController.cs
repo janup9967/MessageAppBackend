@@ -3,28 +3,29 @@ using MessageApp.Helpers;
 using MessageApp.Model;
 using MessageApp.Repositories.Interface;
 using Microsoft.AspNetCore.Mvc;
-
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.SignalR;
 using MessageApp.Hubs;
 
-
-
 namespace MessageApp.Controllers
 {
-
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
     public class MessagesController : ControllerBase
     {
+        #region 1. Dependencies
+
         private readonly IMessageRepository _messageRepository;
         private readonly IUserRepository _userRepository;
-
         private readonly IHubContext<MessageHub> _hubContext;
         private readonly IConversationRepository _conversationRepository;
         private readonly ILogger<MessagesController> _logger;
+
+        #endregion
+
+        #region 2. Constructor
 
         // Only one constructor with all dependencies
         public MessagesController(
@@ -40,6 +41,11 @@ namespace MessageApp.Controllers
             _logger = logger;
             _hubContext = hubContext;
         }
+
+        #endregion
+
+        #region 3. Send Message
+
         [HttpPost]
         public async Task<IActionResult> SendMessage([FromBody] CreateMessageDto dto)
         {
@@ -49,15 +55,10 @@ namespace MessageApp.Controllers
                 return BadRequest(ModelState);
             }
 
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int senderId))
-            {
-                _logger.LogWarning("User ID claim not found or invalid");
-                return Unauthorized("User ID not found in token.");
-            }
 
             try
             {
+                var senderId = GetUserIdFromClaims();
                 var receiver = await _userRepository.GetUserByUsernameAsync(dto.ReceiverIdentifier)
                                ?? await _userRepository.GetUserByEmailAsync(dto.ReceiverIdentifier);
 
@@ -92,10 +93,9 @@ namespace MessageApp.Controllers
                     ConversationId = conversation.Id,
                     Content = dto.Content,
                     Time = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow,
-             TimeZoneInfo.FindSystemTimeZoneById("India Standard Time")), // ✅ IST time
+                        TimeZoneInfo.FindSystemTimeZoneById("India Standard Time")), // ✅ IST time
                     IsRead = false
                 };
-
 
                 var sentMessage = await _messageRepository.SendMessageAsync(message);
                 var sender = await _userRepository.GetUserByIdAsync(senderId);
@@ -118,6 +118,11 @@ namespace MessageApp.Controllers
 
                 return Ok(messageDto);
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogWarning(ex.Message);
+                return Unauthorized(ex.Message);
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error sending message");
@@ -125,20 +130,16 @@ namespace MessageApp.Controllers
             }
         }
 
+        #endregion
 
+        #region 4. Mark as Read
 
         [HttpPut("read")]
         public async Task<IActionResult> MarkAsRead([FromBody] MarkReadDto dto)
-
         {
             try
             {
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
-                {
-                    _logger.LogWarning("User ID claim not found or invalid");
-                    return Unauthorized("User ID not found in token.");
-                }
+                var userId = GetUserIdFromClaims();
 
                 var updatedMessages = new List<Message>();
 
@@ -167,47 +168,74 @@ namespace MessageApp.Controllers
 
                 return Ok(updatedMessages);
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogWarning(ex.Message);
+                return Unauthorized(ex.Message);
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error marking messages as read");
                 return StatusCode(500, "An error occurred.");
             }
-
-
         }
+
+        #endregion
+
+        #region 5. Get Unread Messages
 
         [HttpGet("unread/{conversationId}")]
         public async Task<IActionResult> GetUnreadMessagesFromConversation(int conversationId)
         {
+            try
+            {
+                var userId = GetUserIdFromClaims();
+
+                var unreadMessages = await _messageRepository.GetUnreadMessagesByConversationAsync(userId, conversationId);
+
+                var result = unreadMessages.Select(m => new UnreadMessageDto
+                {
+                    Id = m.Id,
+                    SenderId = m.SenderId,
+                    SenderUsername = m.SenderUsername,
+                    ReceiverId = m.ReceiverId,
+                    ReceiverUsername = m.ReceiverUsername,
+                    Content = m.Content,
+                    Time = m.Time,
+                    IsRead = m.IsRead,
+                    ConversationId = m.ConversationId
+                }).ToList();
+
+                return Ok(result);
+
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogWarning(ex.Message);
+                return Unauthorized(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error unread conversation");
+                return StatusCode(500, "An error occurred.");
+            }
+        }
+
+        #endregion
+
+        #region 6. Private Helpers
+
+        private int GetUserIdFromClaims()
+        {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
             {
-                _logger.LogWarning("User ID claim not found or invalid");
-                return Unauthorized("User ID not found in token.");
+                throw new UnauthorizedAccessException("User ID not found in token.");
             }
-
-            var unreadMessages = await _messageRepository.GetUnreadMessagesByConversationAsync(userId, conversationId);
-
-            var result = unreadMessages.Select(m => new UnreadMessageDto
-            {
-                Id = m.Id,
-                SenderId = m.SenderId,
-                SenderUsername = m.SenderUsername,
-                ReceiverId = m.ReceiverId,
-                ReceiverUsername = m.ReceiverUsername,
-                Content = m.Content,
-                Time = m.Time,
-                IsRead = m.IsRead, 
-                ConversationId = m.ConversationId
-            }).ToList();
-
-            return Ok(result);
+            return userId;
         }
 
- 
-
-
+        #endregion
 
     }
-
 }

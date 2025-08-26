@@ -1,4 +1,3 @@
-
 using MessageApp.Dtos;
 using MessageApp.Helpers;
 using MessageApp.Model;
@@ -7,16 +6,13 @@ using Microsoft.AspNetCore.Mvc;
 using BCrypt.Net;
 using Microsoft.AspNetCore.Authorization;
 
-
-
 namespace MessageApp.Controllers
 {
-
-
     [ApiController]
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
+        #region 1. Fields & Constructor
 
         private readonly IUserRepository _userRepository;
         private readonly JwtService _jwtService;
@@ -29,6 +25,9 @@ namespace MessageApp.Controllers
             _logger = logger;
         }
 
+        #endregion
+
+        #region 2. Authentication Endpoints
 
         [HttpPost("signup")]
         public async Task<IActionResult> SignUp([FromBody] UserSignupDto dto)
@@ -38,7 +37,6 @@ namespace MessageApp.Controllers
 
             try
             {
-
                 var existingUserByEmail = await _userRepository.GetUserByEmailAsync(dto.Email);
                 if (existingUserByEmail != null)
                     return Conflict(new { Message = "Email already registered." });
@@ -67,6 +65,7 @@ namespace MessageApp.Controllers
                 return StatusCode(500, "Internal server error.");
             }
         }
+
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] UserLoginDto dto)
         {
@@ -89,6 +88,10 @@ namespace MessageApp.Controllers
                 return StatusCode(500, new { Message = "Internal server error." });
             }
         }
+
+        #endregion
+
+        #region 3. User Existence
 
         [HttpGet("exists")]
         [Authorize]
@@ -126,6 +129,10 @@ namespace MessageApp.Controllers
             }
         }
 
+        #endregion
+
+        #region 4. Logout
+
         [Authorize]
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
@@ -149,5 +156,7 @@ namespace MessageApp.Controllers
             _logger.LogInformation("User successfully logged out. User ID: {UserId}", userId);
             return Ok(new { Message = result.Message });
         }
+
+        #endregion
     }
 }

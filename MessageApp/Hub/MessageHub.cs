@@ -9,6 +9,8 @@ namespace MessageApp.Hubs
     [Authorize]
     public class MessageHub : Hub
     {
+        #region 1. Commented Connection Tracking
+
         // Track connected users and their connection IDs
         // private static readonly ConcurrentDictionary<int, List<string>> _userConnections = new();
 
@@ -54,6 +56,9 @@ namespace MessageApp.Hubs
         //     await base.OnDisconnectedAsync(exception);
         // }
 
+        #endregion
+
+        #region 2. Send Message
         public async Task SendMessage(ChatMessageDto message)
         {
             var senderId = GetUserId();
@@ -80,11 +85,12 @@ namespace MessageApp.Hubs
 
             // Send to sender (optional, for syncing across devices)
             await Clients.User(senderId.Value.ToString()).SendAsync("ReceiveMessage", message);
-        
 
+
+            // ------------------------
+            // Original commented logic for multiple connections:
 
             // var connectionsToNotify = new List<string>();
-
 
             // Send to receiver
             // if (_userConnections.TryGetValue(message.ReceiverId, out var receiverConnections))
@@ -119,7 +125,9 @@ namespace MessageApp.Hubs
             // }
         }
 
+        #endregion
 
+        #region 3. Send Read Receipt
 
         public async Task SendReadReceipt(int messageId, int originalSenderId, int conversationId)
         {
@@ -133,7 +141,7 @@ namespace MessageApp.Hubs
 
             // Client. All , user , Client , group , 
             var payload = new { messageId, conversationId };
-            
+
             // Notify original sender
             await Clients.User(originalSenderId.ToString()).SendAsync("ReceiveReadReceipt", payload);
 
@@ -141,11 +149,12 @@ namespace MessageApp.Hubs
             await Clients.User(readerId.Value.ToString()).SendAsync("ReceiveReadReceipt", payload);
 
             Console.WriteLine($"📖 Sent read receipt for message {messageId} in conversation {conversationId}");
-        
 
+
+            // ------------------------
+            // Original commented logic for multiple connections:
 
             // var connectionsToNotify = new List<string>();
-
 
             // Add reader's devices
             // if (_userConnections.TryGetValue(readerId.Value, out var readerConnections))
@@ -165,11 +174,16 @@ namespace MessageApp.Hubs
 
         }
 
+        #endregion
+
+        #region 4. Private Helpers
 
         private int? GetUserId()
         {
             var userIdClaim = Context.User?.FindFirst(ClaimTypes.NameIdentifier);
             return userIdClaim != null && int.TryParse(userIdClaim.Value, out var id) ? id : null;
         }
+
+        #endregion
     }
 }
