@@ -197,14 +197,14 @@ namespace MessageApp.Controllers
                 ReceiverUsername = m.ReceiverUsername,
                 Content = m.Content,
                 Time = m.Time,
-                IsRead = m.IsRead,
+                IsRead = m.IsRead, 
                 ConversationId = m.ConversationId
             }).ToList();
 
             return Ok(result);
         }
 
-
+ 
 
 
 
