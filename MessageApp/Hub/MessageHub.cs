@@ -72,6 +72,8 @@ namespace MessageApp.Hubs
 
             Console.WriteLine($"📤 Message from {senderId} to {message.ReceiverId}: {message.Content}");
 
+            //     await Clients.Client(connId).SendAsync("ReceiveMessage", message);
+
 
             // Send to receiver
             await Clients.User(message.ReceiverId.ToString()).SendAsync("ReceiveMessage", message);
@@ -128,6 +130,8 @@ namespace MessageApp.Hubs
                 return;
             }
 
+
+            // Client. All , user , Client , group , 
             var payload = new { messageId, conversationId };
             
             // Notify original sender
