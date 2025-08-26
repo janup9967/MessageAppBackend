@@ -1,6 +1,10 @@
 {
   "version": 2,
+<<<<<<< HEAD
+  "dgSpecHash": "VANmoyPISW4=",
+=======
   "dgSpecHash": "ayTbH/HFE4I=",
+>>>>>>> 90f96f126604aab636ca9c5a70728f84da96aa52
   "success": true,
   "projectFilePath": "C:\\Users\\anupcjai\\Desktop\\Anup\\Task\\messageappbackend\\MessageApp\\MessageApp.csproj",
   "expectedPackageFiles": [
@@ -132,7 +136,7 @@
       "code": "Undefined",
       "level": "Warning",
       "warningLevel": 1,
-      "message": "Problem reading the cache file C:\\Users\\anupcjai\\Desktop\\Anup\\Task\\messageappbackend\\MessageApp\\obj\\project.nuget.cache : Invalid property identifier character: <. Path 'version', line 3, position 0."
+      "message": "Problem reading the cache file C:\\Users\\mriteshp\\OneDrive - Capgemini\\Desktop\\BitBucket\\messageappbackend\\MessageApp\\obj\\project.nuget.cache : Invalid property identifier character: <. Path 'version', line 3, position 0."
     }
   ]
 }
